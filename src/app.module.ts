@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { CharacterModule } from './modules/CharacterModule';
 import { AccountModule } from './modules/AccountModule';
 import { AIAssistantModule } from './modules/AIAssistantModule';
@@ -19,19 +19,24 @@ import { StreakModule } from './modules/StreakModule';
 import { TeamModule } from './modules/TeamModule';
 import { TokenModule } from './modules/TokenModule';
 import { VoiceModule } from './modules/VoiceModule';
+import * as dotenv from 'dotenv';
+
+dotenv.config();
+
+const options: TypeOrmModuleOptions = {
+  type: 'mysql',
+  host: process.env.MYSQL_HOST || 'localhost',
+  port: +(process.env.MYSQL_PORT || '3306'),
+  username: process.env.MYSQL_USERNAME || 'root',
+  password: process.env.MYSQL_PASSWORD || '',
+  database: process.env.MYSQL_DATABASE || 'code-versations',
+  entities: [__dirname + '/src/models'],
+  synchronize: true, // Disable in production
+};
 
 @Module({
   imports: [
-    TypeOrmModule.forRoot({
-      type: 'mysql',
-      host: 'localhost',
-      port: 3366,
-      username: 'admin',
-      password: '123456',
-      database: 'code-versations',
-      entities: [__dirname + '/src/models'],
-      synchronize: true, // Disable in production
-    }),
+    TypeOrmModule.forRoot(options),
     AccountModule,
     AIAssistantModule,
     AIModelModule,
