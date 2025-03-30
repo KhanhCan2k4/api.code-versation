@@ -20,10 +20,15 @@ import { TeamModule } from './modules/TeamModule';
 import { TokenModule } from './modules/TokenModule';
 import { VoiceModule } from './modules/VoiceModule';
 import * as dotenv from 'dotenv';
+import {
+  ServeStaticModule,
+  ServeStaticModuleOptions,
+} from '@nestjs/serve-static';
+import { join } from 'path';
 
 dotenv.config();
 
-const options: TypeOrmModuleOptions = {
+const typeOrmModuleOptions: TypeOrmModuleOptions = {
   type: 'mysql',
   host: process.env.MYSQL_HOST || 'localhost',
   port: +(process.env.MYSQL_PORT || '3306'),
@@ -34,9 +39,15 @@ const options: TypeOrmModuleOptions = {
   synchronize: true, // Disable in production
 };
 
+const serveStaticModuleOptions: ServeStaticModuleOptions = {
+  rootPath: join(__dirname, 'public/images'), // Serve "datas" folder
+  serveRoot: '/images', // URL path prefix 
+};
+
 @Module({
   imports: [
-    TypeOrmModule.forRoot(options),
+    TypeOrmModule.forRoot(typeOrmModuleOptions),
+    ServeStaticModule.forRoot(serveStaticModuleOptions),
     AccountModule,
     AIAssistantModule,
     AIModelModule,
