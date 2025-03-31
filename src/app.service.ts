@@ -11,28 +11,32 @@ export class AppService {
     level: string,
     colorFn: (msg: string) => string,
     message: string,
+    data?: object,
   ) {
     const timestamp = gray(`[${new Date().toISOString()}]`);
     console.log(`${timestamp} ${colorFn(`[${level}]`)} ${message}`);
+    if (data) {
+      console.log(JSON.stringify(data, null, 2));
+    }
   }
 
-  static info(message: string) {
-    this.log('INFO', blue, message);
+  static info(message: string, data?: object) {
+    this.log('INFO', blue, message, data);
   }
 
-  static warn(message: string) {
-    this.log('WARN', yellow, message);
+  static warn(message: string, data?: object) {
+    this.log('WARN', yellow, message, data);
   }
 
-  static error(message: string) {
-    this.log('ERROR', red, message);
+  static error(message: string, data?: object) {
+    this.log('ERROR', red, message, data);
   }
 
-  static debug(message: string) {
-    this.log('DEBUG', magenta, message);
+  static debug(message: string, data?: object) {
+    this.log('DEBUG', magenta, message, data);
   }
 
-  static success(message: string) {
-    this.log('SUCCESS', green, message);
+  static success(message: string, data?: object) {
+    this.log('SUCCESS', green, message, data);
   }
 }
