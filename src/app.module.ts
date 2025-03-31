@@ -25,6 +25,7 @@ import {
   ServeStaticModuleOptions,
 } from '@nestjs/serve-static';
 import { join } from 'path';
+import { MailModule } from './modules/MailModule';
 
 dotenv.config();
 
@@ -41,7 +42,7 @@ const typeOrmModuleOptions: TypeOrmModuleOptions = {
 
 const serveStaticModuleOptions: ServeStaticModuleOptions = {
   rootPath: join(__dirname, 'public/images'), // Serve "datas" folder
-  serveRoot: '/images', // URL path prefix 
+  serveRoot: '/images', // URL path prefix
 };
 
 @Module({
@@ -65,6 +66,7 @@ const serveStaticModuleOptions: ServeStaticModuleOptions = {
     TeamModule,
     TokenModule,
     VoiceModule,
+    MailModule,
   ],
   controllers: [AppController],
   providers: [AppService],
