@@ -1,0 +1,22 @@
+{
+  "admin_id": 9,
+  "gemini_model": "gemini-2.0-flash-001",
+  "maintain_mode": false,
+  "prompts": {
+    "create_ai_assistant": 1,
+    "create_topic": 2,
+    "create_welcome_conversation": 3,
+    "create_conversation": 4,
+    "sugguest_conversation": 5,
+    "process_report_conversation": 6,
+    "explain_conversation": 7,
+    "respond_chat": 8,
+    "create_global_practice": 9,
+    "create_personal_practice": 10,
+    "create_practice_for_conversation": 11,
+    "process_report_practice": 12,
+    "explain_question": 13,
+    "enhance_prompt": 14,
+    "update_prompt": 15
+  }
+}
