@@ -9,21 +9,10 @@ import {
 } from '@nestjs/serve-static';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { join } from 'path';
-import { Language } from './models/Language';
-import { LanguageController } from './controllers/LanguageController';
-import { LanguageService } from './services/LanguageService';
-import { TeamRole } from './models/TeamRole';
-import { TeamRoleController } from './controllers/TeamRoleController';
-import { TeamRoleService } from './services/TeamRoleService';
 import { Account } from './models/Account';
-import { Voice } from './models/Voice';
 import { AccountController } from './controllers/AccountController';
 import { AccountService } from './services/AccountService';
-import { VoiceController } from './controllers/VoiceController';
-import { VoiceService } from './services/VoiceService';
-import { Situation } from './models/Situation';
 import { TopicController } from './controllers/TopicController';
-import { SituationService } from './services/SituationService';
 import { MailerModule, MailerOptions } from '@nestjs-modules/mailer';
 import { Token } from './models/Token';
 import { TokenService } from './services/TokenService';
@@ -48,11 +37,7 @@ import { Log } from './models/Log';
 dotenv.config();
 
 const models = [
-  Language,
-  TeamRole,
   Account,
-  Voice,
-  Situation,
   Token,
   OTP,
   Conversation,
@@ -107,10 +92,7 @@ const mailerOptions: MailerOptions = {
   ],
   controllers: [
     AppController,
-    LanguageController,
-    TeamRoleController,
     AccountController,
-    VoiceController,
     TopicController,
     ConversationController,
     PracticeController,
@@ -118,11 +100,7 @@ const mailerOptions: MailerOptions = {
   ],
   providers: [
     AppService,
-    LanguageService,
-    TeamRoleService,
     AccountService,
-    VoiceService,
-    SituationService,
     TokenService,
     OTPService,
     ConversationService,
