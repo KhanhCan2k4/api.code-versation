@@ -1,10 +1,10 @@
 import { Column, Entity, ManyToOne } from 'typeorm';
 import { Account } from './Account';
 
-@Entity('tokens')
-export class Token {
+@Entity('otps')
+export class OTP {
   @Column({ primary: true })
-  token: string;
+  otp: number;
 
   @Column({ name: 'account_id', primary: true })
   accountId: number;
