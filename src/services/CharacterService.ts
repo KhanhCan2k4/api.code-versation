@@ -1,8 +1,0 @@
-import { Injectable } from '@nestjs/common';
-
-@Injectable()
-export class CharacterService {
-  getAll(): string {
-    return 'all characters';
-  }
-}
