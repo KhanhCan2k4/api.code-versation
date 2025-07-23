@@ -2,7 +2,7 @@
   <head>
     <meta charset='UTF-8' />
     <meta name='viewport' content='width=device-width' />
-    <title>Welcome to {{APP_NAME}}</title>
+    <title>Verify Your Login</title>
     <style
     >
       body {
@@ -31,15 +31,16 @@
         padding: 24px;
         text-align: center;
       }
-      .cta-button {
+      .otp-box {
         display: inline-block;
-        background-color: {{THEME_COLOR}};
-        color: #fff;
-        text-decoration: none;
+        margin: 20px 0;
+        font-size: 32px;
+        font-weight: bold;
+        color: {{THEME_COLOR}};
+        letter-spacing: 10px;
+        background: #f3f3f3;
         padding: 12px 24px;
         border-radius: 8px;
-        font-weight: bold;
-        margin-top: 20px;
       }
       .footer {
         font-size: 12px;
@@ -52,32 +53,21 @@
   <body>
     <div class='container'>
       <div class='header'>
-        <h2>👋 Welcome to {{APP_NAME}}!</h2>
+        <h2>{{APP_NAME}} Login Verification</h2>
       </div>
       <div class='content'>
-        <p>Hi {{USERNAME}},</p>
-        <p>
-          You've just joined
-          <strong>{{APP_NAME}}</strong>
-          — the platform for
-          <strong>learning foreign languages in an IT context</strong>,
-          developed specially for software engineers, devs, and tech minds like
-          you.
-        </p>
-        <p>
-          Powered by
-          <strong>Google Gemini AI</strong>, our lessons adapt to your tech
-          knowledge, helping you communicate more confidently in global tech
-          teams.
-        </p>
+        <p>Hi there - a loyal member of {{APP_NAME}},</p>
+        <p>Use the OTP code below to complete your login:</p>
 
-        <a href='{{DASHBOARD_LINK}}' class='cta-button'>Start Learning</a>
+        <div class='otp-box'>{{OTP_CODE}}</div>
+
+        <p>This code is valid for the next 5 minutes.</p>
+        <p>If you didn't request this, just ignore this email.</p>
       </div>
       <div class='footer'>
         &copy;
         {{CURRENT_YEAR}}
-        {{APP_NAME}}
-        · Language learning reimagined for developers
+        Your App — All rights reserved
       </div>
     </div>
   </body>
