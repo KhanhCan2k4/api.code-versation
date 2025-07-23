@@ -1,0 +1,83 @@
+[
+  {
+    "name": "models/gemini-1.5-pro-latest",
+    "version": "001",
+    "displayName": "Gemini 1.5 Pro Latest",
+    "shortDesc": "Alias that points to the most recent production (non-experimental) release of Gemini 1.5 Pro, our mid-size multimodal model that supports up to 2 million tokens.",
+    "inputTokenLimit": 2000000,
+    "outputTokenLimit": 8192,
+    "supportedGenerationMethods": ["generateContent", "countTokens"]
+  },
+  {
+    "name": "models/gemini-1.5-pro",
+    "version": "001",
+    "displayName": "Gemini 1.5 Pro",
+    "shortDesc": "Stable version of Gemini 1.5 Pro, our mid-size multimodal model that supports up to 2 million tokens, released in May of 2024.",
+    "inputTokenLimit": 2000000,
+    "outputTokenLimit": 8192,
+    "supportedGenerationMethods": ["generateContent", "countTokens"]
+  },
+  {
+    "name": "models/gemini-1.5-flash-latest",
+    "version": "001",
+    "displayName": "Gemini 1.5 Flash Latest",
+    "shortDesc": "Alias that points to the most recent production (non-experimental) release of Gemini 1.5 Flash, our fast and versatile multimodal model for scaling across diverse tasks.",
+    "inputTokenLimit": 1000000,
+    "outputTokenLimit": 8192,
+    "supportedGenerationMethods": ["generateContent", "countTokens"]
+  },
+  {
+    "name": "models/gemini-1.5-flash",
+    "version": "001",
+    "displayName": "Gemini 1.5 Flash",
+    "shortDesc": "Alias that points to the most recent stable version of Gemini 1.5 Flash, our fast and versatile multimodal model for scaling across diverse tasks.",
+    "inputTokenLimit": 1000000,
+    "outputTokenLimit": 8192,
+    "supportedGenerationMethods": ["generateContent", "countTokens"]
+  },
+  {
+    "name": "models/gemini-2.0-flash",
+    "version": "2.0",
+    "displayName": "Gemini 2.0 Flash",
+    "shortDesc": "Gemini 2.0 Flash",
+    "inputTokenLimit": 1048576,
+    "outputTokenLimit": 8192,
+    "supportedGenerationMethods": ["generateContent", "countTokens"]
+  },
+  {
+    "name": "models/gemini-2.0-flash-lite",
+    "version": "2.0",
+    "displayName": "Gemini 2.0 Flash-Lite",
+    "shortDesc": "Gemini 2.0 Flash-Lite",
+    "inputTokenLimit": 1048576,
+    "outputTokenLimit": 8192,
+    "supportedGenerationMethods": ["generateContent", "countTokens"]
+  },
+  {
+    "name": "models/gemini-2.0-flash-thinking-exp-01-21",
+    "version": "2.0-exp-01-21",
+    "displayName": "Gemini 2.0 Flash Thinking Experimental 01-21",
+    "shortDesc": "Experimental release (January 21st, 2025) of Gemini 2.0 Flash Thinking",
+    "inputTokenLimit": 1048576,
+    "outputTokenLimit": 65536,
+    "supportedGenerationMethods": ["generateContent", "countTokens"]
+  },
+  {
+    "name": "models/gemini-2.0-flash-thinking-exp",
+    "version": "2.0-exp-01-21",
+    "displayName": "Gemini 2.0 Flash Thinking Experimental 01-21",
+    "shortDesc": "Experimental release (January 21st, 2025) of Gemini 2.0 Flash Thinking",
+    "inputTokenLimit": 1048576,
+    "outputTokenLimit": 65536,
+    "supportedGenerationMethods": ["generateContent", "countTokens"]
+  },
+  {
+    "name": "models/gemini-2.0-flash-thinking-exp-1219",
+    "version": "2.0",
+    "displayName": "Gemini 2.0 Flash Thinking Experimental",
+    "shortDesc": "Gemini 2.0 Flash Thinking Experimental",
+    "inputTokenLimit": 1048576,
+    "outputTokenLimit": 65536,
+    "supportedGenerationMethods": ["generateContent", "countTokens"]
+  }
+]

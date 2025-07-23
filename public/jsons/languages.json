@@ -1,0 +1,162 @@
+[
+    {
+      "language": "English (US)",
+      "code": "en-US",
+      "reason": "Global tech language, default for programming, tech documentation, and conferences."
+    },
+    {
+      "language": "Italian",
+      "code": "it-IT",
+      "reason": "Growing tech sector and engineering startups in Italy."
+    },
+    {
+      "language": "Swedish",
+      "code": "sv-SE",
+      "reason": "Sweden is a tech innovation hub (Spotify, Klarna, etc.)."
+    },
+    {
+      "language": "French (Canada)",
+      "code": "fr-CA",
+      "reason": "Strong bilingual tech scene in Quebec and Canada overall."
+    },
+    {
+      "language": "Malay",
+      "code": "ms-MY",
+      "reason": "Malaysia is an emerging player in the Southeast Asian digital economy."
+    },
+    {
+      "language": "German",
+      "code": "de-DE",
+      "reason": "Germany is a powerhouse in engineering, automotive, and enterprise software."
+    },
+    {
+      "language": "English (UK)",
+      "code": "en-GB",
+      "reason": "Used widely in Europe; British English is common in international communication."
+    },
+    {
+      "language": "Hebrew",
+      "code": "he-IL",
+      "reason": "Israel is a major tech innovation hub (Start-Up Nation)."
+    },
+    {
+      "language": "English (Australia)",
+      "code": "en-AU",
+      "reason": "Australia has a growing tech industry, especially in education and fintech."
+    },
+    {
+      "language": "Indonesian",
+      "code": "id-ID",
+      "reason": "Indonesia is Southeast Asia’s largest and fastest-growing digital economy."
+    },
+    {
+      "language": "French (France)",
+      "code": "fr-FR",
+      "reason": "France is investing heavily in tech startups and AI research."
+    },
+    {
+      "language": "Bulgarian",
+      "code": "bg-BG",
+      "reason": "Bulgaria is a rising destination for software development outsourcing."
+    },
+    {
+      "language": "Spanish (Spain)",
+      "code": "es-ES",
+      "reason": "Spain has a growing tech and startup scene across Europe."
+    },
+    {
+      "language": "Spanish (Mexico)",
+      "code": "es-MX",
+      "reason": "Mexico’s tech market is rapidly growing with international outsourcing."
+    },
+    {
+      "language": "Finnish",
+      "code": "fi-FI",
+      "reason": "Finland is home to tech innovations like Nokia and a strong gaming industry."
+    },
+    {
+      "language": "Japanese",
+      "code": "ja-JP",
+      "reason": "Japan is a global leader in electronics, robotics, and gaming."
+    },
+    {
+      "language": "Korean",
+      "code": "ko-KR",
+      "reason": "South Korea is a leader in internet technologies, gaming, and AI."
+    },
+    {
+      "language": "Portuguese (Brazil)",
+      "code": "pt-BR",
+      "reason": "Brazil has one of the largest tech startup ecosystems in Latin America."
+    },
+    {
+      "language": "Chinese (Simplified)",
+      "code": "zh-CN",
+      "reason": "China is a tech superpower in AI, e-commerce, and software."
+    },
+    {
+      "language": "Chinese (Traditional)",
+      "code": "zh-TW",
+      "reason": "Taiwan has a strong presence in hardware manufacturing and tech innovation."
+    },
+    {
+      "language": "Dutch (Belgium)",
+      "code": "nl-BE",
+      "reason": "Belgium is a multilingual country with a growing tech presence."
+    },
+    {
+      "language": "Romanian",
+      "code": "ro-RO",
+      "reason": "Romania is known for IT outsourcing and software development."
+    },
+    {
+      "language": "Portuguese (Portugal)",
+      "code": "pt-PT",
+      "reason": "Portugal’s tech scene is growing, especially in startups and fintech."
+    },
+    {
+      "language": "Thai",
+      "code": "th-TH",
+      "reason": "Thailand’s digital economy is expanding, with strong government support."
+    },
+    {
+      "language": "Croatian",
+      "code": "hr-HR",
+      "reason": "Croatia is emerging in software development and tech tourism."
+    },
+    {
+      "language": "Slovak",
+      "code": "sk-SK",
+      "reason": "Slovakia has a growing software development outsourcing sector."
+    },
+    {
+      "language": "Hindi",
+      "code": "hi-IN",
+      "reason": "India is one of the world's biggest IT hubs with strong global influence."
+    },
+    {
+      "language": "Ukrainian",
+      "code": "uk-UA",
+      "reason": "Ukraine is a major hub for software outsourcing and engineering talent."
+    },
+    {
+      "language": "Vietnamese",
+      "code": "vi-VN",
+      "reason": "Vietnam’s IT outsourcing and startup ecosystems are booming."
+    },
+    {
+      "language": "Arabic",
+      "code": "ar-001",
+      "reason": "Arabic-speaking countries are increasing tech investments across regions."
+    },
+    {
+      "language": "Greek",
+      "code": "el-GR",
+      "reason": "Greece’s tech and startup ecosystem is growing within Europe."
+    },
+    {
+      "language": "Russian",
+      "code": "ru-RU",
+      "reason": "Russia has strong traditions in math, cybersecurity, and software engineering."
+    }
+  ]
