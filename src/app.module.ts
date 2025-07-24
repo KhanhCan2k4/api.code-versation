@@ -33,6 +33,9 @@ import { PromptService } from './services/PromptService';
 import { TopicService } from './services/TopicService';
 import { ImageService } from './services/ImageService';
 import { Log } from './models/Log';
+import { Marketing } from './models/Marketing';
+import { MarketingService } from './services/MarketingService';
+import { MarketingController } from './controllers/MarketingController';
 
 dotenv.config();
 
@@ -47,6 +50,7 @@ const models = [
   Question,
   Prompt,
   Log,
+  Marketing,
 ];
 
 const typeOrmModuleOptions: TypeOrmModuleOptions = {
@@ -97,6 +101,7 @@ const mailerOptions: MailerOptions = {
     ConversationController,
     PracticeController,
     PromptController,
+    MarketingController
   ],
   providers: [
     AppService,
@@ -108,6 +113,7 @@ const mailerOptions: MailerOptions = {
     PromptService,
     TopicService,
     ImageService,
+    MarketingService,
   ],
 })
 export class AppModule {}

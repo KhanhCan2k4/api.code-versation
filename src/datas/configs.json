@@ -17,6 +17,7 @@
     "process_report_practice": 12,
     "explain_question": 13,
     "enhance_prompt": 14,
-    "update_prompt": 15
+    "update_prompt": 15,
+    "marketing_prompt": 16
   }
 }

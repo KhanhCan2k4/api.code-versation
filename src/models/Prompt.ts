@@ -14,6 +14,9 @@ export class Prompt {
   @Column({ type: 'longtext' })
   content: string;
 
+  @Column({ default: 0 })
+  count: number;
+
   @Column({
     name: 'updated_at',
     type: 'timestamp',

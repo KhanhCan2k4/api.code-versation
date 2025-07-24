@@ -28,7 +28,7 @@ export class AppService {
     store?: boolean,
   ) {
     const timestamp = gray(`[${new Date().toISOString()}]`);
-    console.log(`${timestamp} ${colorFn(`[${level}]`)} ${message}`);
+    console.log(`${timestamp} ${colorFn(`[${LogType[level]}]`)} ${message}`);
     if (data) {
       console.log(JSON.stringify(data, null, 2));
     }

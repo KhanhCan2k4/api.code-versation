@@ -7,6 +7,7 @@ import {
 } from 'typeorm';
 import { Topic } from './Topic';
 import { LineOfSpeech } from './LineOfSpeech';
+import { Status } from 'src/datas/enums/status';
 
 @Entity('conversations')
 export class Conversation {
@@ -18,6 +19,13 @@ export class Conversation {
 
   @Column({ nullable: true, name: 'short_desc', type: 'longtext' })
   shortDesc;
+
+  @Column({
+    type: 'tinyint',
+    nullable: false,
+    default: Status.ACTIVE,
+  })
+  status: Status;
 
   @Column({
     name: 'updated_at',
