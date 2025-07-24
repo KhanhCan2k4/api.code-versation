@@ -11,30 +11,31 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AppService } from 'src/app.service';
+import { Marketing } from 'src/models/Marketing';
 import PaginatedObject from 'src/models/PaginatedObject';
 import { Topic } from 'src/models/Topic';
 import { AccountService } from 'src/services/AccountService';
 import { ImageService } from 'src/services/ImageService';
+import { MarketingService } from 'src/services/MarketingService';
 import { TopicService } from 'src/services/TopicService';
 
-@Controller('/api/topics')
-export class TopicController {
+@Controller('/api/marketings')
+export class MarketingController {
   /** PROPERTIES **/
 
   /** CONSTRUCTOR **/
   constructor(
-    protected readonly topicService: TopicService,
+    protected readonly marketingService: MarketingService,
     protected readonly accountService: AccountService,
-    protected readonly imageService: ImageService,
   ) {}
 
   /** METHODS **/
 
   /**
-   * to get all languages that are supported in app
+   * to get all marketings
    */
   @Get('/paginated')
-  getAllSupportedLanguages(
+  getAllMarketings(
     @Res() res,
     @Query() query: { per_page: number; page: number; key: string },
   ) {
@@ -44,12 +45,12 @@ export class TopicController {
 
     // AppService.info('check pagination params', { page, perPage, key });
 
-    this.topicService
-      .getPaginatedTopics(page, perPage, key)
+    this.marketingService
+      .getPaginatedMarketings(page, perPage, key)
       .then((data) => {
         // AppService.debug('data', data);
 
-        return res.json(data);
+        return res.status(200).json(data);
       })
       .catch((error) => res.status(500).json({ error }));
   }
@@ -57,7 +58,7 @@ export class TopicController {
   @Post('/store')
   async store(
     @Res() res,
-    @Body() body: { topic: Topic },
+    @Body() body: { marketing: Marketing },
     @Headers() header: { token: string },
   ) {
     // CHECK ADMIN ACCOUNT
@@ -69,11 +70,11 @@ export class TopicController {
     }
 
     try {
-      await this.topicService.store(body.topic);
+      await this.marketingService.store(body.marketing);
 
       return res.status(200).json(true);
     } catch (error) {
-      AppService.error('Cannot store topic', error);
+      AppService.error('Cannot store marketing', error);
       return res.status(500).json(false);
     }
   }
@@ -94,17 +95,17 @@ export class TopicController {
 
     // START DELETING
     try {
-      const result = await this.topicService.deleteByIds(body.ids);
+      const result = await this.marketingService.deleteByIds(body.ids);
 
       return res.status(200).json(result);
     } catch (error) {
-      AppService.error('Cannot delete topics by their ids', error);
+      AppService.error('Cannot delete marketings by their ids', error);
       return res.status(500).json(false);
     }
   }
 
   @Post('/ids')
-  async getTopicsByIds(
+  async getMarketingsByIds(
     @Res() res,
     @Body() body: { ids: number[] },
     @Headers() header: { token: string },
@@ -118,73 +119,9 @@ export class TopicController {
     }
 
     // GET BY IDS
-    const topics = await this.topicService.getTopicsByIds(body.ids);
+    const marketings = await this.marketingService.getMarketingsByIds(body.ids);
 
-    return res.status(200).json(topics);
-  }
-
-  /**
-   * to get all background covers of topics
-   */
-  @Get('/images')
-  async getBackgroundCovers(@Res() res, @Headers() header: { token: string }) {
-    // CHECK ADMIN ACCOUNT
-    const admin = await this.accountService.loginAdminWithToken(header.token);
-
-    if (!admin) {
-      AppService.error('Admin Not Found');
-      return res.status(403).json(false);
-    }
-
-    return res
-      .status(200)
-      .json(this.imageService.getAllImagesOfFolder('topics'));
-  }
-
-  @Post('/upload')
-  @UseInterceptors(FileInterceptor('image'))
-  async uploadImage(
-    @Res() res,
-    @UploadedFile() image: Express.Multer.File,
-    @Headers() header: { token: string },
-  ) {
-    // CHECK ADMIN ACCOUNT
-    const admin = await this.accountService.loginAdminWithToken(header.token);
-
-    if (!admin) {
-      AppService.error('Admin Not Found');
-      return res.status(403).json(false);
-    }
-
-    // CHECK FILE EXIST
-    if (!image) {
-      AppService.error('Image Not Uploaded');
-      return res.status(500).json(false);
-    }
-
-    const result = await this.imageService.saveImageIntoFolder('topics', image);
-
-    return res.status(200).json(result);
-  }
-
-  @Post('/delete-image')
-  async deleteImage(
-    @Res() res,
-    @Body() body: { image: string },
-    @Headers() header: { token: string },
-  ) {
-    // CHECK ADMIN ACCOUNT
-    const admin = await this.accountService.loginAdminWithToken(header.token);
-
-    if (!admin) {
-      AppService.error('Admin Not Found');
-      return res.status(403).json(false);
-    }
-
-    // REMOVE IMAGE INTO TRASH
-    const result = await this.imageService.moveToTrash(body.image);
-
-    return res.status(200).json(result);
+    return res.status(200).json(marketings);
   }
 
   /** STATIC METHODS **/

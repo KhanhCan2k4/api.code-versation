@@ -1,35 +1,81 @@
-import { Body, Controller, Get, Query, Res } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Headers,
+  Post,
+  Query,
+  Res,
+} from '@nestjs/common';
 import { AppService } from 'src/app.service';
-import PaginatedObject from 'src/models/PaginatedObject';
+import { Status } from 'src/datas/enums/status';
+import { AccountService } from 'src/services/AccountService';
 import { ConversationService } from 'src/services/ConversationService';
 
 @Controller('/api/conversations')
 export class ConversationController {
   // CONSTRUCTOR
-  constructor(private readonly conService: ConversationService) {}
+  constructor(
+    private readonly conService: ConversationService,
+    private readonly accountService: AccountService,
+  ) {}
 
   //   METHODS
-  @Get('/paginated')
+  @Post('/paginated')
   async getPaginated(
     @Res() res,
-    @Query()
-    query: { page: number; 'per-page': number; 'excluded-ids[]': number[] },
+    @Body()
+    body: {
+      page: number;
+      per_page: number;
+      excluded_ids: number[];
+      key: string;
+    },
   ) {
     try {
       const result = await this.conService.getPaginatedConversations(
-        query.page,
-        query['per-page'],
-        query['excluded-ids[]'],
+        body.page,
+        body.per_page,
+        body.excluded_ids,
+        body.key,
       );
-
-      result.data.forEach((con) => {
-        con['image'] = `/topics/${con.topic_id ?? con.id}.jpg`;
-      });
 
       return res.status(200).json(result);
     } catch (error) {
       AppService.error('Cannot get paginated list of conversations', error);
-      return res.status(500);
+      return res.status(500).json(false);
+    }
+  }
+
+  @Post('/delete')
+  async deleteByIds(
+    @Res() res,
+    @Body() body: { ids: number[] },
+    @Headers() header: { token: string },
+  ) {
+    // CHECK ADMIN ACCOUNT
+    const admin = await this.accountService.loginAdminWithToken(header.token);
+
+    if (!admin) {
+      AppService.error('Admin Not Found');
+      return res.status(403).json(false);
+    }
+
+    // GET BY IDS
+    const conversations = await this.conService.getConversationsByIds(body.ids);
+
+    // SET NEW STATUS
+    conversations.forEach((con) => {
+      con.status = Status.DELETED;
+    });
+
+    try {
+      const result = await this.conService.saveConversations(conversations);
+
+      return res.status(200).json(result);
+    } catch (error) {
+      AppService.error('Cannot delete conversations with ids', error);
+      return res.status(500).json(false);
     }
   }
 

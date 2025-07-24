@@ -24,6 +24,7 @@ import { TopicService } from 'src/services/TopicService';
 import { async } from 'rxjs';
 import { ConversationService } from 'src/services/ConversationService';
 import { PromptService } from 'src/services/PromptService';
+import { MarketingService } from 'src/services/MarketingService';
 
 const THEME_COLORS = [
   '#3b82f6', // blue
@@ -52,6 +53,7 @@ export class AccountController {
     protected readonly appService: AppService,
     protected readonly conService: ConversationService,
     protected readonly promptService: PromptService,
+    protected readonly marService: MarketingService,
   ) {}
 
   /**
@@ -572,6 +574,16 @@ export class AccountController {
 
     // AppService.debug('topics', topics);
 
+    // GET DELETED CONVERSATIONS
+    const cons = await this.conService.getDeletedConversations();
+
+    // AppService.debug('cons', cons);
+
+    // GET DELETED MARKETINGS
+    const mars = await this.marService.getDeletedMarketings();
+
+    // AppService.debug('mars', mars);
+
     // ADD DATA TO LIST
     accounts.forEach((account) => {
       trashItems.push({
@@ -586,6 +598,22 @@ export class AccountController {
         id: topic.id,
         table: 'topics',
         data: topic,
+      });
+    });
+
+    cons.forEach((conversation) => {
+      trashItems.push({
+        id: conversation.id,
+        table: 'conversations',
+        data: conversation,
+      });
+    });
+
+    mars.forEach((marketing) => {
+      trashItems.push({
+        id: marketing.id,
+        table: 'marketings',
+        data: marketing,
       });
     });
 
@@ -687,6 +715,38 @@ export class AccountController {
       return res.status(200).json(result);
     }
 
+    // DELETE CONVERSATIONS
+    if (body.scope === 'conversations') {
+      // GET DELETED CONVERSATION
+      const con = await this.conService.getConversationById(body.id);
+
+      if (!con) {
+        AppService.error('Conversation Not Found');
+        return res.status(500).json(false);
+      }
+
+      // DELETE CONVERSATION
+      const result = await this.conService.delete(con);
+
+      return res.status(200).json(result);
+    }
+
+    // DELETE MARKETINGS
+    if (body.scope === 'marketings') {
+      // GET DELETED MARKETING
+      const mar = await this.marService.getMarketingById(body.id);
+
+      if (!mar) {
+        AppService.error('Marketing Not Found');
+        return res.status(500).json(false);
+      }
+
+      // DELETE MARKETING
+      const result = await this.marService.delete(mar);
+
+      return res.status(200).json(result);
+    }
+
     return res.status(404).json(false);
   }
 
@@ -704,14 +764,14 @@ export class AccountController {
       return res.status(403).json(false);
     }
 
-    // DELETE IMAGE
+    // RESTORE IMAGE
     if (body.scope === 'images') {
       const result = await this.imageService.restoreFromTrash(body.data);
 
       return res.status(200).json(result);
     }
 
-    // DELETE ACCOUNTS
+    // RESTORE ACCOUNTS
     if (body.scope === 'accounts') {
       // GET ACCOUNT TO RESTORE
       const account = await this.accountService.getAIAccountByID(body.id);
@@ -728,7 +788,7 @@ export class AccountController {
       return res.status(200).json(result);
     }
 
-    // DELETE TOPICS
+    // RESTORE TOPICS
     if (body.scope === 'topics') {
       // GET RESTORED TOPIC BY ID
       const topic = await this.topicService.getTopicById(body.id);
@@ -741,6 +801,40 @@ export class AccountController {
       // CHANGE THE STATUS
       topic.status = Status.ACTIVE;
       const result = await this.topicService.store(topic);
+
+      return res.status(200).json(result);
+    }
+
+    // RESTORE CONVERSATIONS
+    if (body.scope === 'conversations') {
+      // GET RESTORED CONVERSATION BY ID
+      const con = await this.conService.getConversationById(body.id);
+
+      if (!con) {
+        AppService.error('Conversation Not Found');
+        return res.status(500).json(false);
+      }
+
+      // CHANGE THE STATUS
+      con.status = Status.ACTIVE;
+      const result = await this.conService.saveConversations([con]);
+
+      return res.status(200).json(result);
+    }
+
+    // RESTORE MARKETINGS
+    if (body.scope === 'marketings') {
+      // GET RESTORED TOPIC BY ID
+      const marketing = await this.marService.getMarketingById(body.id);
+
+      if (!marketing) {
+        AppService.error('Marketing Not Found');
+        return res.status(500).json(false);
+      }
+
+      // CHANGE THE STATUS
+      marketing.status = Status.ACTIVE;
+      const result = await this.marService.store(marketing);
 
       return res.status(200).json(result);
     }

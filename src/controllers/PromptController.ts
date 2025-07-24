@@ -105,6 +105,36 @@ export class PromptController {
   }
 
   /**
+   * to call ai to create new marketing
+   * @param res
+   * @param header
+   * @returns
+   */
+  @Get('/create-marketing')
+  async createMarketing(
+    @Res() res,
+    @Query() query: { title: string },
+    @Headers() header: { token: string },
+  ) {
+    // GET ADMIN AND BEFORE REQUESTING
+    const admin = await this.accountService.loginAdminWithToken(header.token);
+
+    if (!admin) {
+      AppService.error('Admin Not Found');
+      return res.status(403).json(false);
+    }
+
+    try {
+      const marketing = await this.promptService.createMarketing(query.title);
+
+      return res.status(200).json(marketing);
+    } catch (error) {
+      AppService.error('Cannot create marketing', error);
+      return res.status(500).json(false);
+    }
+  }
+
+  /**
    * to call ai to create new conversation
    * @param res
    * @param header
@@ -305,6 +335,7 @@ export class PromptController {
     }
 
     prompt.content = body.prompt;
+    prompt.count += 1;
 
     if (await this.promptService.update(prompt)) {
       return res.status(200).json(true);
