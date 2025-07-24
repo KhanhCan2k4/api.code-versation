@@ -14,6 +14,7 @@ import { LineOfSpeech } from 'src/models/LineOfSpeech';
 import { Question } from 'src/models/Question';
 import { PracticeService } from './PracticeService';
 import { TopicService } from './TopicService';
+import { Marketing } from 'src/models/Marketing';
 
 @Injectable()
 export class PromptService {
@@ -121,6 +122,52 @@ export class PromptService {
       return topic;
     } catch (error) {
       AppService.error('Cannot create new topic', error);
+      return null;
+    }
+  }
+
+  /**
+   * call ai to generate a new marketing
+   * @returns
+   */
+  async createMarketing(input: string): Promise<Marketing | null> {
+    // GET PROMPT TO FULFILL THIS TASK
+    const _configs: typeof configs = require('../datas/configs.json');
+    const prompt = await this.promptRepo.findOne({
+      where: { id: _configs.prompts.marketing_prompt },
+    });
+    // AppService.debug('prompt', { prompt });
+
+    if (!prompt) return null;
+
+    // PICK 1 ASSISTANT AI KEY TO FULFILL TASK
+    const apiKey = await this.accountService.getActiveAIKey();
+    // AppService.debug('aiKey', { apiKey });
+
+    // CREATE AI OBJECT
+    const ai = new GoogleGenerativeAI(apiKey);
+    // AppService.debug('ai', ai);
+
+    const model = ai.getGenerativeModel({ model: _configs.gemini_model });
+    // AppService.debug('model', model);
+
+    // PREPARE DATA
+    prompt.content = PromptService.buildInputPrompt(prompt.content, [
+      {
+        key: '{{KEYWORD}}',
+        inputData: input,
+      },
+    ]);
+
+    const result = await model.generateContent(prompt.content);
+
+    try {
+      const marketing = PromptService.extractJsonFromAiResponse<Marketing>(
+        result.response.text(),
+      );
+      return marketing;
+    } catch (error) {
+      AppService.error('Cannot create new marketing', error);
       return null;
     }
   }

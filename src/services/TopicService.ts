@@ -103,6 +103,19 @@ export class TopicService {
   }
 
   /**
+   * get a topics by ids
+   * @returns
+   */
+  async getTopicsByIds(ids: number[]): Promise<Topic[]> {
+    // QUERY AND RETURN DATA
+    const topics = await this.topicRepo.find({
+      where: { id: In(ids) },
+    });
+
+    return topics;
+  }
+
+  /**
    * get a random topic
    * @returns
    */

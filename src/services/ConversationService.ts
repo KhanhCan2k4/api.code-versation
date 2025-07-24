@@ -3,11 +3,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Account } from 'src/models/Account';
 import { Conversation } from 'src/models/Conversation';
 import PaginatedObject from 'src/models/PaginatedObject';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { AccountService } from './AccountService';
 import { AppService } from 'src/app.service';
 import { LineOfSpeech } from 'src/models/LineOfSpeech';
-import { Topic } from 'src/models/Topic';
+import { Status } from 'src/datas/enums/status';
 
 @Injectable()
 export class ConversationService {
@@ -35,7 +35,7 @@ export class ConversationService {
   async getPaginatedConversations(
     page: number = 1,
     perPage: number = this.PER_PAGE,
-    excludedIds: number[] = [-1],
+    excludedIds: number[] = [],
     key?: string,
   ): Promise<PaginatedObject<Conversation>> {
     try {
@@ -61,7 +61,14 @@ export class ConversationService {
     try {
       const [cons, total] = await this.conRepo
         .createQueryBuilder('conversations')
-        .where(`conversations.id NOT IN (${excludedIds.join(',')})`)
+        .where(
+          '(conversations.id NOT IN (:excludedIds)) AND (conversations.status = :status) AND (conversations.title LIKE :key OR conversations.short_desc LIKE :key OR conversations.updated_at LIKE :key)',
+          {
+            excludedIds: [...excludedIds, -1, -1].join(','),
+            key: `%${key ?? ''}%`,
+            status: Status.ACTIVE,
+          },
+        )
         .skip(skip)
         .take(take)
         .orderBy('updated_at', 'DESC')
@@ -139,6 +146,86 @@ export class ConversationService {
       return true;
     } catch (error) {
       AppService.error('Cannot save conversation into database', error);
+      return false;
+    }
+  }
+
+  /**
+   * get all deleted conversations
+   */
+  async getDeletedConversations(): Promise<Conversation[]> {
+    try {
+      const cons = await this.conRepo.find({
+        where: { status: Status.DELETED },
+      });
+
+      return cons;
+    } catch (error) {
+      AppService.error('Cannot get deleted conversations', error);
+      return [];
+    }
+  }
+
+  /**
+   * to save conversations into database
+   * @param conversations
+   * @returns boolean
+   */
+  async saveConversations(conversations: Conversation[]): Promise<boolean> {
+    try {
+      await this.conRepo.save(conversations);
+
+      return true;
+    } catch (error) {
+      AppService.error('Cannot save conversations into database', error);
+      return false;
+    }
+  }
+
+  /**
+   * get all conversations by ids
+   * @param ids
+   * @returns
+   */
+  async getConversationsByIds(ids: number[]): Promise<Conversation[]> {
+    try {
+      const conversations = await this.conRepo.find({ where: { id: In(ids) } });
+
+      return conversations;
+    } catch (error) {
+      AppService.error('Cannot get conversations by ids', error);
+      return [];
+    }
+  }
+
+  /**
+   * get all conversation by id
+   * @param id
+   * @returns
+   */
+  async getConversationById(id: number): Promise<Conversation | null> {
+    try {
+      const conversation = await this.conRepo.findOne({ where: { id: id } });
+
+      return conversation;
+    } catch (error) {
+      AppService.error('Cannot get conversation by id', error);
+      return null;
+    }
+  }
+
+  /**
+   * to delete a conversation forever
+   * @param con
+   * @returns
+   */
+  async delete(con: Conversation): Promise<boolean> {
+    try {
+      await this.conRepo.remove(con);
+
+      return true;
+    } catch (error) {
+      AppService.error('Cannot delete conversation', error);
       return false;
     }
   }
