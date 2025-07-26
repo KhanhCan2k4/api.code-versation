@@ -1,5 +1,12 @@
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { Practice } from './Practice';
+import { Comment } from './Comment';
 
 export enum QuestionType {
   AUDIO_TEXT = 1,
@@ -44,4 +51,10 @@ export class Question {
     onDelete: 'CASCADE',
   })
   practice: Practice;
+
+  @OneToMany(() => Comment, (comment) => comment.question, {
+    onDelete: 'CASCADE',
+    cascade: true,
+  })
+  comments: Comment[];
 }

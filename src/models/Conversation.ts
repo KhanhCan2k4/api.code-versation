@@ -8,6 +8,7 @@ import {
 import { Topic } from './Topic';
 import { LineOfSpeech } from './LineOfSpeech';
 import { Status } from 'src/datas/enums/status';
+import { Comment } from './Comment';
 
 @Entity('conversations')
 export class Conversation {
@@ -50,4 +51,10 @@ export class Conversation {
     cascade: true,
   })
   lines: LineOfSpeech[];
+
+  @OneToMany(() => Comment, (comment) => comment.conversation, {
+    onDelete: 'CASCADE',
+    cascade: true,
+  })
+  comments: Comment[];
 }

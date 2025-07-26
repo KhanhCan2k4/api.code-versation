@@ -1,7 +1,13 @@
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
-import { Topic } from './Topic';
+import {
+  Column,
+  Entity,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { Account } from './Account';
 import { Conversation } from './Conversation';
+import { Comment } from './Comment';
 
 @Entity('line_of_speechs')
 export class LineOfSpeech {
@@ -33,4 +39,10 @@ export class LineOfSpeech {
     onDelete: 'CASCADE',
   })
   conversation: Conversation;
+
+  @OneToMany(() => Comment, (comment) => comment.line, {
+    onDelete: 'CASCADE',
+    cascade: true,
+  })
+  comments: Comment[];
 }

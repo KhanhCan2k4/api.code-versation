@@ -14,8 +14,16 @@ export class Practice {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @Column({
+    name: 'updated_at',
+    type: 'timestamp',
+    default: () => 'CURRENT_TIMESTAMP',
+    onUpdate: 'CURRENT_TIMESTAMP',
+  })
+  updatedAt: Date;
+
   // RELATIONS
-  @Column()
+  @Column({ default: -1 })
   account_id: number;
 
   @ManyToOne(() => Account, (account) => account.practices)

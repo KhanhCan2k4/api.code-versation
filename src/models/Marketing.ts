@@ -19,6 +19,9 @@ export class Marketing {
   })
   status: Status;
 
+  @Column({ default: 0 })
+  count: number;
+
   @Column({
     name: 'activated_at',
     type: 'timestamp',

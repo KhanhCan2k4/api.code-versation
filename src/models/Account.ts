@@ -10,6 +10,7 @@ import {
 import { Token } from './Token';
 import { LineOfSpeech } from './LineOfSpeech';
 import { Practice } from './Practice';
+import { Comment } from './Comment';
 
 @Entity('accounts')
 export class Account {
@@ -82,4 +83,10 @@ export class Account {
 
   @OneToMany(() => Practice, (practice) => practice.account)
   practices: Practice[];
+
+  @OneToMany(() => Comment, (comment) => comment.account, {
+    onDelete: 'CASCADE',
+    cascade: true,
+  })
+  comments: Comment[];
 }
