@@ -2,6 +2,7 @@
   "admin_id": 9,
   "gemini_model": "gemini-2.0-flash-001",
   "maintain_mode": false,
+  "origins": ["http://localhost:5173", "http://127.0.0.1:5173"],
   "prompts": {
     "create_ai_assistant": 1,
     "create_topic": 2,

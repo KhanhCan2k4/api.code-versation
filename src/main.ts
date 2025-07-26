@@ -2,13 +2,16 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { AppService } from './app.service';
 
+import configs from './datas/configs.json';
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   const port = process.env.PORT ?? 3000;
 
   // Allow only specific origin
-  const allowedOrigins = require('../public/jsons/origins.json');
+  const _configs: typeof configs = require('./datas/configs.json');
+  const allowedOrigins: string[] = _configs.origins;
 
   app.enableCors({
     origin: (origin, callback) => {
