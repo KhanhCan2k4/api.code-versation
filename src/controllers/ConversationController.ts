@@ -30,6 +30,7 @@ export class ConversationController {
       per_page: number;
       excluded_ids: number[];
       key: string;
+      attached_welcome: boolean;
     },
   ) {
     try {
@@ -38,6 +39,7 @@ export class ConversationController {
         body.per_page,
         body.excluded_ids,
         body.key,
+        body.attached_welcome,
       );
 
       return res.status(200).json(result);
@@ -79,7 +81,7 @@ export class ConversationController {
     }
   }
 
-  @Get('/')
+  @Get('/welcome')
   async getWelcome(@Res() res) {
     const conversation = await this.conService.getWelcomeConversation();
 
@@ -89,6 +91,19 @@ export class ConversationController {
     }
 
     AppService.success('Get welcome conversation successfully');
+    return res.status(200).json(conversation);
+  }
+
+  @Get('/')
+  async getConversationById(@Res() res, @Query() query: { id: number }) {
+    const conversation = await this.conService.getConversationById(query.id);
+
+    if (!conversation) {
+      AppService.error('Cannot get conversation with id');
+      return res.status(500).json(false);
+    }
+
+    AppService.success('Get conversation with id successfully');
     return res.status(200).json(conversation);
   }
 

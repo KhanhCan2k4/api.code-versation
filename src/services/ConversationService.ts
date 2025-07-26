@@ -8,6 +8,8 @@ import { AccountService } from './AccountService';
 import { AppService } from 'src/app.service';
 import { LineOfSpeech } from 'src/models/LineOfSpeech';
 import { Status } from 'src/datas/enums/status';
+import { TopicService } from './TopicService';
+import { Topic } from 'src/models/Topic';
 
 @Injectable()
 export class ConversationService {
@@ -21,6 +23,7 @@ export class ConversationService {
     @InjectRepository(LineOfSpeech)
     protected readonly lineRepo: Repository<LineOfSpeech>,
     protected readonly accountService: AccountService,
+    protected readonly topicService: TopicService,
   ) {}
 
   /** METHODS **/
@@ -37,6 +40,7 @@ export class ConversationService {
     perPage: number = this.PER_PAGE,
     excludedIds: number[] = [],
     key?: string,
+    attachedWelcome: boolean = true,
   ): Promise<PaginatedObject<Conversation>> {
     try {
       const totalData = await this.conRepo.count();
@@ -62,11 +66,17 @@ export class ConversationService {
       const [cons, total] = await this.conRepo
         .createQueryBuilder('conversations')
         .where(
-          '(conversations.id NOT IN (:excludedIds)) AND (conversations.status = :status) AND (conversations.title LIKE :key OR conversations.short_desc LIKE :key OR conversations.updated_at LIKE :key)',
+          `conversations.id NOT IN (:...excludedIds) 
+            AND (conversations.topic_id > :min)
+            AND (conversations.status = :status) 
+            AND (conversations.title LIKE :key 
+              OR conversations.short_desc LIKE :key 
+              OR conversations.updated_at LIKE :key)`,
           {
-            excludedIds: [...excludedIds, -1, -1].join(','),
+            excludedIds: [...excludedIds, -1, -1],
             key: `%${key ?? ''}%`,
             status: Status.ACTIVE,
+            min: attachedWelcome ? -2 : 0,
           },
         )
         .skip(skip)
@@ -74,6 +84,18 @@ export class ConversationService {
         .orderBy('updated_at', 'DESC')
         .addOrderBy('title', 'ASC')
         .getManyAndCount();
+
+      // GET TOPICS WITH IDS IN LIST OF CONVERSATIONS
+      const topics = await this.topicService.getTopicsByIds(
+        cons.map((c) => c.topic_id),
+      );
+
+      // ATTACH TOPIC INTO CONVERSATION LIST
+      cons.forEach((c) => {
+        const newTopic = topics.find((t) => t.id === c.topic_id) ?? new Topic();
+        newTopic.id = c.topic_id;
+        c.topic = newTopic;
+      });
 
       return new PaginatedObject(page, perPage, key, total, cons);
     } catch (e) {
@@ -87,10 +109,12 @@ export class ConversationService {
    */
   async getWelcomeConversation(): Promise<Conversation | null> {
     // GET WELCOME CONVERSATION IDS
-    const welcomeConIds = [1];
+    const welcomeConIds = (
+      await this.conRepo.find({ where: { topic_id: -1 } })
+    ).map((c) => c.id);
     const id = welcomeConIds[Math.floor(Math.random() * welcomeConIds.length)];
 
-    AppService.debug('Welcome conversation id', { id });
+    // AppService.debug('Welcome conversation id', { id });
 
     // QUERY AND RETURN DATA
     const conversation = await this.conRepo.findOne({
@@ -205,7 +229,10 @@ export class ConversationService {
    */
   async getConversationById(id: number): Promise<Conversation | null> {
     try {
-      const conversation = await this.conRepo.findOne({ where: { id: id } });
+      const conversation = await this.conRepo.findOne({
+        where: { id: id },
+        relations: ['lines', 'lines.speaker', 'topic'],
+      });
 
       return conversation;
     } catch (error) {

@@ -21,10 +21,10 @@ import { ImageService } from 'src/services/ImageService';
 import { OTPService } from 'src/services/OTPService';
 import { Express } from 'express';
 import { TopicService } from 'src/services/TopicService';
-import { async } from 'rxjs';
 import { ConversationService } from 'src/services/ConversationService';
 import { PromptService } from 'src/services/PromptService';
 import { MarketingService } from 'src/services/MarketingService';
+import { PracticeService } from 'src/services/PracticeService';
 
 const THEME_COLORS = [
   '#3b82f6', // blue
@@ -54,6 +54,7 @@ export class AccountController {
     protected readonly conService: ConversationService,
     protected readonly promptService: PromptService,
     protected readonly marService: MarketingService,
+    protected readonly practiceService: PracticeService,
   ) {}
 
   /**
@@ -503,11 +504,17 @@ export class AccountController {
     ).data.length;
 
     // PRACTICES
+    const practiceQuantity = (
+      await this.practiceService.getPaginatedPractices(1, 100000, '')
+    ).data.length;
 
     // PROMPTS
     const promptQuantity = (await this.promptService.getAllPrompts()).length;
 
     // MARKETING
+    const marQuantity = (
+      await this.marService.getPaginatedMarketings(1, 100000, '')
+    ).data.length;
 
     // MAINTAINACE
     const maintainStatus = this.accountService.checkAPIMode() ? 200 : 404;
@@ -522,11 +529,16 @@ export class AccountController {
       this.imageService.getAllImagesOfFolder('trash/topics');
     const accounts = await this.accountService.getDeletedAIAccounts();
     const topics = await this.topicService.getDeletedTopics();
+    const conversations = await this.conService.getDeletedConversations();
+    const marketings = await this.marService.getDeletedMarketings();
+
     const trashQuantity =
       imagesOfCharacters.length +
       imagesOfTopics.length +
       accounts.length +
-      topics.length;
+      topics.length +
+      conversations.length +
+      marketings.length;
 
     return res.status(200).json({
       user: userQuantity,
@@ -537,8 +549,8 @@ export class AccountController {
       log: logQuantity,
       trash: trashQuantity,
       maintain: maintainStatus,
-      marketing: 0,
-      practice: 0,
+      marketing: marQuantity,
+      practice: practiceQuantity,
     });
   }
 

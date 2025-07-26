@@ -11,7 +11,6 @@ import configs from '../datas/configs.json';
 import { AccountStatus, Status } from 'src/datas/enums/status';
 import * as fs from 'fs';
 import * as path from 'path';
-import { ImageService } from './ImageService';
 
 const EMAIL_REGEX =
   /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;

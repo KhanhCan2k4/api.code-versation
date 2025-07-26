@@ -5,6 +5,7 @@ import { Practice } from 'src/models/Practice';
 import { Account } from 'src/models/Account';
 import { Question } from 'src/models/Question';
 import { AppService } from 'src/app.service';
+import PaginatedObject from 'src/models/PaginatedObject';
 
 @Injectable()
 export class PracticeService {
@@ -20,6 +21,56 @@ export class PracticeService {
   ) {}
 
   /** METHODS **/
+  /**
+   * to get paginated practices
+   *
+   * @param page page
+   * @param perPage
+   * @param key
+   * @returns Promise<PaginatedObject<Topic>>
+   */
+  async getPaginatedPractices(
+    page: number = 1,
+    perPage: number = this.PER_PAGE,
+    key: string = '',
+  ): Promise<PaginatedObject<Practice>> {
+    try {
+      const totalData = await this.practiceRepo.count();
+
+      if (perPage < 1) {
+        perPage = this.PER_PAGE;
+      }
+
+      const lastPage = Math.ceil((totalData * 1.0) / perPage);
+
+      if (page < 1 || page > lastPage) {
+        page = 1;
+      }
+    } catch (e) {
+      page = 1;
+      perPage = this.PER_PAGE;
+    }
+
+    const skip = (page - 1) * perPage;
+    const take = perPage;
+
+    try {
+      const [practices, total] = await this.practiceRepo
+        .createQueryBuilder('practices')
+        .skip(skip)
+        .take(take)
+        .orderBy('practices.updated_at', 'DESC')
+        .getManyAndCount();
+
+      // AppService.debug('practices', practices);
+
+      return new PaginatedObject(page, perPage, key, total, practices);
+    } catch (e) {
+      AppService.error('Cannot paginate practices', e);
+      throw new Error('Cannot paginate', e);
+    }
+  }
+
   /**
    * get a practice with the id or return the default one
    * @param id
