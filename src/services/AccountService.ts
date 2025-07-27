@@ -4,13 +4,14 @@ import { AppService } from 'src/app.service';
 import { Account } from 'src/models/Account';
 import PaginatedObject from 'src/models/PaginatedObject';
 import UpdatedResponseObject from 'src/models/UpdatedResponseObject';
-import { In, Not, Repository } from 'typeorm';
+import { DeepPartial, In, Not, Repository } from 'typeorm';
 import { OTPService } from './OTPService';
 import { TokenService } from './TokenService';
 import configs from '../datas/configs.json';
 import { AccountStatus, Status } from 'src/datas/enums/status';
 import * as fs from 'fs';
 import * as path from 'path';
+import { AIKey } from 'src/models/AIKey';
 
 const EMAIL_REGEX =
   /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
@@ -31,6 +32,8 @@ export class AccountService {
   constructor(
     @InjectRepository(Account)
     protected readonly accountRepo: Repository<Account>,
+    @InjectRepository(AIKey)
+    protected readonly keyRepo: Repository<AIKey>,
     protected readonly otpService: OTPService,
     protected readonly tokenService: TokenService,
   ) {}
@@ -683,6 +686,51 @@ export class AccountService {
     });
 
     return accounts;
+  }
+
+  async syncAIKeys(keys: string[], account: Account): Promise<void> {
+    try {
+      // CHECK KEY EXITS
+      const _keys = (
+        await this.keyRepo.find({ where: { accountId: account.id } })
+      ).map((k) => k.key);
+
+      // FILTER DISTINC KEYS AND SAVE
+      const distincKeys: string[] = [];
+      const removedKeys: string[] = [];
+
+      _keys.forEach((k) => {
+        if (!keys.includes(k)) {
+          removedKeys.push(k);
+        } else {
+          distincKeys.push(k);
+        }
+      });
+
+      // SAVE
+      await this.keyRepo.save(
+        distincKeys.map((k) => {
+          const newK = new AIKey();
+          newK.key = k;
+          newK.accountId = account.id;
+
+          return newK;
+        }),
+      );
+
+      // REMOVE
+      await this.keyRepo.remove(
+        removedKeys.map((k) => {
+          const newK = new AIKey();
+          newK.key = k;
+          newK.accountId = account.id;
+
+          return newK;
+        }),
+      );
+    } catch (error) {
+      AppService.error('Cannot sync ai keys', error);
+    }
   }
 
   /** STATIC METHODS **/

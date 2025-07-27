@@ -51,10 +51,4 @@ export class Question {
     onDelete: 'CASCADE',
   })
   practice: Practice;
-
-  @OneToMany(() => Comment, (comment) => comment.question, {
-    onDelete: 'CASCADE',
-    cascade: true,
-  })
-  comments: Comment[];
 }

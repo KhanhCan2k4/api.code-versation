@@ -288,7 +288,7 @@ export class PromptService {
         );
 
       // ADD BEFORE STORING INTO DATABASE
-      conversation.title = 'WELCOME COMVERSATION';
+      conversation.title = 'The Welcome conversation';
       conversation.shortDesc = 'To welcome and be showed on Home Page';
 
       // AppService.debug('conversation', conversation);

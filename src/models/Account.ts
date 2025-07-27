@@ -83,10 +83,4 @@ export class Account {
 
   @OneToMany(() => Practice, (practice) => practice.account)
   practices: Practice[];
-
-  @OneToMany(() => Comment, (comment) => comment.account, {
-    onDelete: 'CASCADE',
-    cascade: true,
-  })
-  comments: Comment[];
 }

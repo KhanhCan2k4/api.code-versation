@@ -3,13 +3,14 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Account } from 'src/models/Account';
 import { Conversation } from 'src/models/Conversation';
 import PaginatedObject from 'src/models/PaginatedObject';
-import { In, Repository } from 'typeorm';
+import { FindOptionsWhere, In, Repository } from 'typeorm';
 import { AccountService } from './AccountService';
 import { AppService } from 'src/app.service';
 import { LineOfSpeech } from 'src/models/LineOfSpeech';
 import { Status } from 'src/datas/enums/status';
 import { TopicService } from './TopicService';
 import { Topic } from 'src/models/Topic';
+import { LikedConversation } from 'src/models/LikedConversation';
 
 @Injectable()
 export class ConversationService {
@@ -20,6 +21,8 @@ export class ConversationService {
   constructor(
     @InjectRepository(Conversation)
     protected readonly conRepo: Repository<Conversation>,
+    @InjectRepository(LikedConversation)
+    protected readonly likedConRepo: Repository<LikedConversation>,
     @InjectRepository(LineOfSpeech)
     protected readonly lineRepo: Repository<LineOfSpeech>,
     protected readonly accountService: AccountService,
@@ -98,6 +101,101 @@ export class ConversationService {
       });
 
       return new PaginatedObject(page, perPage, key, total, cons);
+    } catch (e) {
+      throw new Error('Cannot paginate', e);
+    }
+  }
+
+  /**
+   * to get paginated conversations
+   *
+   * @param page page
+   * @param perPage
+   * @param key
+   * @returns Promise<PaginatedObject<Account>>
+   */
+  async getPaginatedLikedConversations(
+    page: number = 1,
+    perPage: number = this.PER_PAGE,
+    _likedIds: number[] = [],
+    account: Account | null,
+  ): Promise<PaginatedObject<Conversation>> {
+    // GET LIKED IDS
+    let likedIds: number[] = [];
+
+    if (account) {
+      likedIds = (
+        await this.likedConRepo.find({ where: { accountId: account.id } })
+      ).map((l) => l.conversationId);
+    } else {
+      (
+        await this.conRepo.find({
+          where: { id: In([..._likedIds, -1, -1]) },
+        })
+      ).map((l) => l.id);
+    }
+
+    AppService.debug('likedIds', likedIds);
+
+    if (likedIds.length === 0) {
+      return new PaginatedObject(1, 0, '', 0, []);
+    }
+
+    try {
+      const totalData = await this.conRepo.count({
+        where: { id: In([...likedIds, -1, -1]) },
+      });
+
+      if (perPage < 1) {
+        perPage = this.PER_PAGE;
+      }
+
+      const lastPage = Math.ceil((totalData * 1.0) / perPage);
+
+      if (page < 1 || page > lastPage) {
+        page = lastPage;
+      }
+    } catch (e) {
+      page = 1;
+      perPage = this.PER_PAGE;
+    }
+
+    const skip = (page - 1) * perPage;
+    const take = perPage;
+
+    try {
+      const [cons, total] = await this.conRepo
+        .createQueryBuilder('conversations')
+        .where(
+          `conversations.id IN (:...likedIds) 
+            AND (conversations.topic_id > 0)
+            AND (conversations.status = :status)`,
+          {
+            likedIds: [...likedIds, -1, -1],
+            status: Status.ACTIVE,
+          },
+        )
+        .skip(skip)
+        .take(take)
+        .orderBy('updated_at', 'DESC')
+        .addOrderBy('title', 'ASC')
+        .getManyAndCount();
+
+      // AppService.debug('cons', cons);
+
+      // GET TOPICS WITH IDS IN LIST OF CONVERSATIONS
+      const topics = await this.topicService.getTopicsByIds(
+        cons.map((c) => c.topic_id),
+      );
+
+      // ATTACH TOPIC INTO CONVERSATION LIST
+      cons.forEach((c) => {
+        const newTopic = topics.find((t) => t.id === c.topic_id) ?? new Topic();
+        newTopic.id = c.topic_id;
+        c.topic = newTopic;
+      });
+
+      return new PaginatedObject(page, perPage, '', total, cons);
     } catch (e) {
       throw new Error('Cannot paginate', e);
     }
@@ -283,5 +381,58 @@ export class ConversationService {
       AppService.error('Cannot save line into database', error);
       return false;
     }
+  }
+
+  /**
+   * to save liked conversations
+   */
+  async syncLikedConversations(ids: number[], account: Account): Promise<void> {
+    // GET CONVERSATIONS BY IDS
+    const conversationIds = (
+      await this.conRepo.find({
+        where: { id: In(ids) },
+      })
+    ).map((c) => c.id);
+
+    // GET LIKED CONVERSATIONS BY IDS
+    const likedConversationIds = (
+      await this.likedConRepo.find({
+        where: { conversationId: In(conversationIds) },
+      })
+    ).map((c) => c.accountId);
+
+    // FILTER DATA
+    const distincConIds: number[] = [];
+    const removedConIds: number[] = [];
+
+    conversationIds.forEach((id) => {
+      if (!likedConversationIds.includes(id)) {
+        removedConIds.push(id);
+      } else {
+        distincConIds.push(id);
+      }
+    });
+
+    // SAVE
+    await this.likedConRepo.save(
+      distincConIds.map((id) => {
+        const newLikedCon = new LikedConversation();
+        newLikedCon.accountId = account.id;
+        newLikedCon.conversationId = id;
+
+        return newLikedCon;
+      }),
+    );
+
+    // REMOVE
+    await this.likedConRepo.remove(
+      removedConIds.map((id) => {
+        const newLikedCon = new LikedConversation();
+        newLikedCon.accountId = account.id;
+        newLikedCon.conversationId = id;
+
+        return newLikedCon;
+      }),
+    );
   }
 }

@@ -51,10 +51,4 @@ export class Conversation {
     cascade: true,
   })
   lines: LineOfSpeech[];
-
-  @OneToMany(() => Comment, (comment) => comment.conversation, {
-    onDelete: 'CASCADE',
-    cascade: true,
-  })
-  comments: Comment[];
 }

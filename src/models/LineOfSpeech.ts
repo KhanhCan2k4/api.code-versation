@@ -39,10 +39,4 @@ export class LineOfSpeech {
     onDelete: 'CASCADE',
   })
   conversation: Conversation;
-
-  @OneToMany(() => Comment, (comment) => comment.line, {
-    onDelete: 'CASCADE',
-    cascade: true,
-  })
-  comments: Comment[];
 }
