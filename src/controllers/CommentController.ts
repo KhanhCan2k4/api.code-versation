@@ -9,6 +9,7 @@ import {
   Res,
 } from '@nestjs/common';
 import { AppService } from 'src/app.service';
+import { AccountService } from 'src/services/AccountService';
 import { CommentService, Parent } from 'src/services/CommentService';
 
 @Controller('/api/comments')
@@ -16,7 +17,10 @@ export class CommentController {
   /** PROPERTIES **/
 
   /** CONSTRUCTOR **/
-  constructor(protected readonly commentService: CommentService) {}
+  constructor(
+    protected readonly commentService: CommentService,
+    protected readonly accountService: AccountService,
+  ) {}
 
   /** METHODS **/
 
@@ -37,7 +41,7 @@ export class CommentController {
   /**
    * to like/dislike comment
    */
-  @Put("/")
+  @Put('/')
   async updateComment(
     @Res() res,
     @Query()
@@ -55,6 +59,40 @@ export class CommentController {
       query.unlike,
       query.dislike,
       query.undislike,
+    );
+
+    return res.status(200).json(result);
+  }
+
+  /**
+   * to like/dislike comment
+   */
+  @Post('/')
+  async addComment(
+    @Res() res,
+    @Body()
+    body: {
+      id: number;
+      of: Parent;
+      comment: string;
+      is_report?: boolean;
+    },
+    @Headers() header: { token: string },
+  ) {
+    // GET ACCOUNT
+    const account = await this.accountService.loginWithToken(header.token);
+
+    if (!account) {
+      AppService.error('Account Not Found');
+      return res.status(403).json(false);
+    }
+
+    const result = await this.commentService.addComment(
+      body.comment,
+      body.of,
+      body.id,
+      account,
+      body.is_report,
     );
 
     return res.status(200).json(result);

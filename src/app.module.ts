@@ -41,6 +41,8 @@ import { ReportController } from './controllers/ReportController';
 import { Comment } from './models/Comment';
 import { CommentController } from './controllers/CommentController';
 import { CommentService } from './services/CommentService';
+import { AIKey } from './models/AIKey';
+import { LikedConversation } from './models/LikedConversation';
 
 dotenv.config();
 
@@ -57,6 +59,8 @@ const models = [
   Log,
   Marketing,
   Comment,
+  AIKey,
+  LikedConversation,
 ];
 
 const typeOrmModuleOptions: TypeOrmModuleOptions = {

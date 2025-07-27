@@ -870,6 +870,36 @@ export class AccountController {
     return res.status(200).json(logs);
   }
 
+  @Post('/sync')
+  async syncUserData(
+    @Res() res,
+    @Headers() header: { token: string },
+    @Body() body: { ai_keys: string[]; liked_con_ids: number[] },
+  ) {
+    // CHECK ACCOUNT
+    const account = await this.accountService.loginWithToken(header.token);
+
+    if (!account) {
+      AppService.error('Account Not Found');
+      return res.status(500);
+    }
+
+    try {
+      // SYNC AI KEYS
+      await this.accountService.syncAIKeys(body.ai_keys, account);
+
+      // SYNC LIKED CONVERSATIONS
+      await this.conService.syncLikedConversations(body.liked_con_ids, account);
+
+      // SYNC LIKED LINES
+
+      return res.status(200).json(true);
+    } catch (error) {
+      AppService.error('Sync data error', error);
+      return res.status(500).json(false);
+    }
+  }
+
   /**
    * to send welcome message for first access account
    * @param account
