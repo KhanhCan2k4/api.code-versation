@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Account } from 'src/models/Account';
 import { Conversation } from 'src/models/Conversation';
 import PaginatedObject from 'src/models/PaginatedObject';
-import { FindOptionsWhere, In, Repository } from 'typeorm';
+import { In, Not, Repository } from 'typeorm';
 import { AccountService } from './AccountService';
 import { AppService } from 'src/app.service';
 import { LineOfSpeech } from 'src/models/LineOfSpeech';
@@ -11,6 +11,8 @@ import { Status } from 'src/datas/enums/status';
 import { TopicService } from './TopicService';
 import { Topic } from 'src/models/Topic';
 import { LikedConversation } from 'src/models/LikedConversation';
+import { LearntConversation } from 'src/models/LearntConversation';
+import { PracticedConversation } from 'src/models/PracticedConversation';
 
 @Injectable()
 export class ConversationService {
@@ -23,6 +25,10 @@ export class ConversationService {
     protected readonly conRepo: Repository<Conversation>,
     @InjectRepository(LikedConversation)
     protected readonly likedConRepo: Repository<LikedConversation>,
+    @InjectRepository(LearntConversation)
+    protected readonly learntConRepo: Repository<LearntConversation>,
+    @InjectRepository(PracticedConversation)
+    protected readonly practicedConRepo: Repository<PracticedConversation>,
     @InjectRepository(LineOfSpeech)
     protected readonly lineRepo: Repository<LineOfSpeech>,
     protected readonly accountService: AccountService,
@@ -54,7 +60,11 @@ export class ConversationService {
 
       const lastPage = Math.ceil((totalData * 1.0) / perPage);
 
-      if (page < 1 || page > lastPage) {
+      if (page < 1) {
+        page = 1;
+      }
+
+      if (page > lastPage) {
         page = lastPage;
       }
     } catch (e) {
@@ -202,6 +212,83 @@ export class ConversationService {
   }
 
   /**
+   * to get paginated conversations by ids
+   *
+   * @param page page
+   * @param perPage
+   * @param key
+   * @returns Promise<PaginatedObject<Account>>
+   */
+  async getPaginatedConversationsByIds(
+    page: number = 1,
+    perPage: number = this.PER_PAGE,
+    ids: number[] = [],
+  ): Promise<PaginatedObject<Conversation>> {
+    try {
+      const totalData = await this.conRepo.count({
+        where: { id: In(ids) },
+      });
+
+      if (perPage < 1) {
+        perPage = this.PER_PAGE;
+      }
+
+      const lastPage = Math.ceil((totalData * 1.0) / perPage);
+
+      if (page < 1) {
+        page = 1;
+      }
+
+      if (page > lastPage) {
+        page = lastPage;
+      }
+    } catch (e) {
+      page = 1;
+      perPage = this.PER_PAGE;
+    }
+
+    const skip = (page - 1) * perPage;
+    const take = perPage;
+
+    try {
+      const [cons, total] = await this.conRepo
+        .createQueryBuilder('conversations')
+        .where(
+          `conversations.id IN (:...ids) 
+            AND (conversations.topic_id > 0)
+            AND (conversations.status = :status)`,
+          {
+            ids: [...ids, -1, -1],
+            status: Status.ACTIVE,
+          },
+        )
+        .skip(skip)
+        .take(take)
+        .orderBy('updated_at', 'DESC')
+        .addOrderBy('title', 'ASC')
+        .getManyAndCount();
+
+      // AppService.debug('cons', cons);
+
+      // GET TOPICS WITH IDS IN LIST OF CONVERSATIONS
+      const topics = await this.topicService.getTopicsByIds(
+        cons.map((c) => c.topic_id),
+      );
+
+      // ATTACH TOPIC INTO CONVERSATION LIST
+      cons.forEach((c) => {
+        const newTopic = topics.find((t) => t.id === c.topic_id) ?? new Topic();
+        newTopic.id = c.topic_id;
+        c.topic = newTopic;
+      });
+
+      return new PaginatedObject(page, perPage, '', total, cons);
+    } catch (e) {
+      throw new Error('Cannot paginate', e);
+    }
+  }
+
+  /**
    * get a random welcome conversation
    * @returns
    */
@@ -272,6 +359,40 @@ export class ConversationService {
     }
   }
 
+  async like(
+    conversation: Conversation,
+    account: Account,
+    liked: boolean = true,
+  ): Promise<boolean> {
+    try {
+      if (liked) {
+        await this.likedConRepo.save({
+          accountId: account.id,
+          conversationId: conversation.id,
+        });
+      } else {
+        const likedCon = await this.likedConRepo.findOne({
+          where: {
+            accountId: account.id,
+            conversationId: conversation.id,
+          },
+        });
+
+        if (!likedCon) {
+          AppService.error('Not found conversation to unlike');
+          return false;
+        }
+
+        await this.likedConRepo.remove(likedCon);
+      }
+
+      return true;
+    } catch (error) {
+      AppService.error('Cannot like/unlike conversation', error);
+      return false;
+    }
+  }
+
   /**
    * get all deleted conversations
    */
@@ -309,13 +430,43 @@ export class ConversationService {
    * @param ids
    * @returns
    */
-  async getConversationsByIds(ids: number[]): Promise<Conversation[]> {
+  async getConversationsByIds(
+    ids: number[],
+    loadLine: boolean = false,
+  ): Promise<Conversation[]> {
     try {
-      const conversations = await this.conRepo.find({ where: { id: In(ids) } });
+      const conversations = await this.conRepo.find({
+        where: { id: In(ids) },
+        relations: loadLine ? ['lines'] : [],
+      });
 
       return conversations;
     } catch (error) {
       AppService.error('Cannot get conversations by ids', error);
+      return [];
+    }
+  }
+
+  /**
+   * get 50 latest conversations
+   * @returns
+   */
+  async getLatestConversations(
+    limit: number = 50,
+    loadLine: boolean = false,
+    oldId: number[] = [],
+  ): Promise<Conversation[]> {
+    try {
+      const conversations = await this.conRepo.find({
+        where: { id: Not(In([...oldId, -1, -1])) },
+        relations: loadLine ? ['lines'] : [],
+        take: limit,
+        order: { updatedAt: { direction: 'DESC' } },
+      });
+
+      return conversations;
+    } catch (error) {
+      AppService.error('Cannot get latest conversations', error);
       return [];
     }
   }
@@ -336,6 +487,167 @@ export class ConversationService {
     } catch (error) {
       AppService.error('Cannot get conversation by id', error);
       return null;
+    }
+  }
+
+  /**
+   * to get learnt conversations' ids
+   * @param account
+   * @returns
+   */
+  async syncLearntIds(account: Account, ids: number[]) {
+    try {
+      // FILTER IDS EXISTING
+      ids = (await this.conRepo.find({ where: { id: In(ids) } })).map(
+        (c) => c.id,
+      );
+
+      const _ids = (
+        await this.learntConRepo.find({
+          where: { accountId: account.id },
+        })
+      ).map((c) => c.conversationId);
+
+      // GET DIFFERENT IDS
+      const diffIds = ids.filter((i) => !_ids.includes(i));
+
+      // SAVE DIFFERENT IDS
+      await this.learntConRepo.save(
+        diffIds.map((i) => {
+          const _new = new LearntConversation();
+          _new.accountId = account.id;
+          _new.conversationId = i;
+
+          return _new;
+        }),
+      );
+    } catch (error) {
+      AppService.error('Cannot get learnt ids', error);
+      throw new Error("Cannot get learnt conversations' ids");
+    }
+  }
+
+  /**
+   * to get practiced conversations' ids
+   * @param account
+   * @returns
+   */
+  async syncPracticedIds(account: Account, ids: number[]) {
+    try {
+      // FILTER IDS EXISTING
+      ids = (await this.conRepo.find({ where: { id: In(ids) } })).map(
+        (c) => c.id,
+      );
+
+      const _ids = (
+        await this.practicedConRepo.find({
+          where: { accountId: account.id },
+        })
+      ).map((c) => c.conversationId);
+
+      // GET DIFFERENT IDS
+      const diffIds = ids.filter((i) => !_ids.includes(i));
+
+      // SAVE DIFFERENT IDS
+      await this.practicedConRepo.save(
+        diffIds.map((i) => {
+          const _new = new PracticedConversation();
+          _new.accountId = account.id;
+          _new.conversationId = i;
+
+          return _new;
+        }),
+      );
+    } catch (error) {
+      AppService.error('Cannot get practiced ids', error);
+      throw new Error("Cannot get practiced conversations' ids");
+    }
+  }
+
+  /**
+   * to get liked conversations' ids
+   * @param account
+   * @returns
+   */
+  async syncLikedIds(account: Account, ids: number[]) {
+    try {
+      // FILTER IDS EXISTING
+      ids = (await this.conRepo.find({ where: { id: In(ids) } })).map(
+        (c) => c.id,
+      );
+
+      const _ids = (
+        await this.likedConRepo.find({
+          where: { accountId: account.id },
+        })
+      ).map((c) => c.conversationId);
+
+      // GET DIFFERENT IDS
+      const diffIds = ids.filter((i) => !_ids.includes(i));
+
+      // SAVE DIFFERENT IDS
+      await this.likedConRepo.save(
+        diffIds.map((i) => {
+          const _new = new LikedConversation();
+          _new.accountId = account.id;
+          _new.conversationId = i;
+
+          return _new;
+        }),
+      );
+    } catch (error) {
+      AppService.error('Cannot get liked ids', error);
+      throw new Error("Cannot get liked conversations' ids");
+    }
+  }
+
+  /**
+   * to get liked conversations' ids
+   * @param account
+   * @returns
+   */
+  async getLikedIds(account: Account) {
+    try {
+      const _ids = (
+        await this.likedConRepo.find({
+          where: { accountId: account.id },
+        })
+      ).map((c) => c.conversationId);
+
+      // FILTER IDS EXISTING
+      const ids = (await this.conRepo.find({ where: { id: In(_ids) } })).map(
+        (c) => c.id,
+      );
+
+      return ids;
+    } catch (error) {
+      AppService.error('Cannot get liked ids', error);
+      return [];
+    }
+  }
+
+  /**
+   * to get learnt conversations' ids
+   * @param account
+   * @returns
+   */
+  async getLearntIds(account: Account) {
+    try {
+      const _ids = (
+        await this.learntConRepo.find({
+          where: { accountId: account.id },
+        })
+      ).map((c) => c.conversationId);
+
+      // FILTER IDS EXISTING
+      const ids = (await this.conRepo.find({ where: { id: In(_ids) } })).map(
+        (c) => c.id,
+      );
+
+      return ids;
+    } catch (error) {
+      AppService.error('Cannot get learnt ids', error);
+      return [];
     }
   }
 

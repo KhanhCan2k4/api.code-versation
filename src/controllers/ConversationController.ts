@@ -42,39 +42,128 @@ export class ConversationController {
       attached_welcome: boolean;
       tab: TAB;
     },
-    @Headers() header: { token: string },
   ) {
-    // GET ACCOUNT
-    const account = await this.accountService.loginWithToken(header.token);
-
     try {
-      let data;
-      switch (body.tab) {
-        case TAB.AI_SUGGESTION:
-        case TAB.ON_FIRE:
-          data = await this.conService.getPaginatedConversations(
-            body.page,
-            body.per_page,
-            body.excluded_ids,
-            body.key,
-            body.attached_welcome,
-          );
-          break;
-        case TAB.ON_HISTORY:
-        case TAB.WITH_LOVE:
-          data = await this.conService.getPaginatedLikedConversations(
-            body.page,
-            body.per_page,
-            body.liked_ids,
-            account,
-          );
-          break; 
-      }
+      const data = await this.conService.getPaginatedConversations(
+        body.page ?? 1,
+        body.per_page,
+        body.excluded_ids,
+        body.key,
+        body.attached_welcome,
+      );
+
       return res.status(200).json(data);
     } catch (error) {
       AppService.error('Cannot get paginated list of conversations', error);
       return res.status(500).json(false);
     }
+  }
+
+  @Post('/ids/paginated')
+  async getPaginatedByIds(
+    @Res() res,
+    @Body()
+    body: {
+      page: number;
+      per_page: number;
+      ids: number[];
+    },
+  ) {
+    try {
+      AppService.debug('body', body);
+
+      // GET CONVERSATIONS BY IDS
+      const cons = await this.conService.getPaginatedConversationsByIds(
+        body.page ?? 1,
+        body.per_page,
+        body.ids,
+      );
+
+      return res.status(200).json(cons);
+    } catch (error) {
+      AppService.error('Cannot get paginated conversations by ids', error);
+      return res.status(500).json(false);
+    }
+  }
+
+  @Post('/liked/paginated')
+  async getPaginatedLiked(
+    @Res() res,
+    @Body() body: { ids: number[]; page?: number; per_page?: number },
+    @Headers() header: { token: string },
+  ) {
+    // CHECK ACCOUNT
+    const account = await this.accountService.loginWithToken(header.token);
+
+    let likedIds = body.ids;
+    if (account) {
+      likedIds = await this.conService.getLikedIds(account);
+    }
+
+    const result = await this.conService.getPaginatedConversationsByIds(
+      body.page,
+      body.per_page,
+      likedIds,
+    );
+
+    return res.status(200).json(result);
+  }
+
+  @Put('/like')
+  async like(
+    @Res() res,
+    @Body() body: { id: number; liked: boolean },
+    @Headers() header: { token: string },
+  ) {
+    // GET ACCOUNT
+    const account = await this.accountService.loginWithToken(header.token);
+
+    if (!account) {
+      AppService.error('Account Not Found');
+      return res.status(403).json(false);
+    }
+
+    // GET CONVERSATION BY ID
+    const conversation = await this.conService.getConversationById(body.id);
+
+    if (!conversation) {
+      AppService.error('Conversation Not Found');
+      return res.status(500).json(false);
+    }
+
+    // SET LIKE/UNLIKE
+    const result = await this.conService.like(
+      conversation,
+      account,
+      body.liked,
+    );
+
+    return res.status(200).json(result);
+  }
+
+  @Post('/learnt/paginated')
+  async getPaginatedLearnt(
+    @Res() res,
+    @Body() body: { ids: number[]; page?: number; per_page?: number },
+    @Headers() header: { token: string },
+  ) {
+    AppService.debug('body', body);
+
+    // CHECK ACCOUNT
+    const account = await this.accountService.loginWithToken(header.token);
+
+    let learntIds = body.ids;
+    if (account) {
+      learntIds = await this.conService.getLearntIds(account);
+    }
+
+    const result = await this.conService.getPaginatedConversationsByIds(
+      body.page,
+      body.per_page,
+      learntIds,
+    );
+
+    return res.status(200).json(result);
   }
 
   @Post('/delete')

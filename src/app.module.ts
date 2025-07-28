@@ -43,6 +43,8 @@ import { CommentController } from './controllers/CommentController';
 import { CommentService } from './services/CommentService';
 import { AIKey } from './models/AIKey';
 import { LikedConversation } from './models/LikedConversation';
+import { LearntConversation } from './models/LearntConversation';
+import { PracticedConversation } from './models/PracticedConversation';
 
 dotenv.config();
 
@@ -61,6 +63,8 @@ const models = [
   Comment,
   AIKey,
   LikedConversation,
+  LearntConversation,
+  PracticedConversation,
 ];
 
 const typeOrmModuleOptions: TypeOrmModuleOptions = {

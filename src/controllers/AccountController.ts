@@ -42,6 +42,14 @@ type TrashItem = {
   data: string | object;
 };
 
+type SyncData = {
+  likedConIds: number[];
+  learntConIds: number[];
+  practicedConIds: number[];
+  suggestedConIds: number[];
+  geminiKeys: string[];
+};
+
 @Controller('/api/accounts')
 export class AccountController {
   constructor(
@@ -874,7 +882,7 @@ export class AccountController {
   async syncUserData(
     @Res() res,
     @Headers() header: { token: string },
-    @Body() body: { ai_keys: string[]; liked_con_ids: number[] },
+    @Body() body: SyncData,
   ) {
     // CHECK ACCOUNT
     const account = await this.accountService.loginWithToken(header.token);
@@ -885,19 +893,54 @@ export class AccountController {
     }
 
     try {
-      // SYNC AI KEYS
-      await this.accountService.syncAIKeys(body.ai_keys, account);
+      await this.conService.syncLikedIds(account, body.likedConIds);
 
-      // SYNC LIKED CONVERSATIONS
-      await this.conService.syncLikedConversations(body.liked_con_ids, account);
+      await this.conService.syncLearntIds(account, body.learntConIds);
 
-      // SYNC LIKED LINES
+      await this.conService.syncPracticedIds(account, body.practicedConIds);
+
+      await this.accountService.syncAIKeys(account, body.geminiKeys);
 
       return res.status(200).json(true);
     } catch (error) {
-      AppService.error('Sync data error', error);
+      AppService.error('Cannot get sync data', error);
       return res.status(500).json(false);
     }
+  }
+
+  @Post('/save-key')
+  async saveKey(
+    @Res() res,
+    @Body() body: { key: string },
+    @Headers() header: { token: string },
+  ) {
+    // CHECK ACCOUNT
+    const account = await this.accountService.loginWithToken(header.token);
+
+    if (!account) {
+      AppService.error('Account Not Found');
+      return res.status(403).json(false);
+    }
+
+    const result = await this.accountService.saveKey(account, body.key);
+
+    return res.status(200).json(result);
+  }
+
+  @Get('/api-keys')
+  async getAPIKeys(@Res() res, @Headers() header: { token: string }) {
+    // CHECK ACCOUNT
+    const account = await this.accountService.loginWithToken(header.token);
+
+    if (!account) {
+      AppService.error('Account Not Found');
+      return res.status(403).json(false);
+    }
+
+    // GET API KEYS
+    const keys = await this.accountService.getAIKeysOfAccount(account);
+
+    return res.status(200).json(keys);
   }
 
   /**

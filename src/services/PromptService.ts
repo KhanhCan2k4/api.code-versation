@@ -15,16 +15,20 @@ import { Question } from 'src/models/Question';
 import { PracticeService } from './PracticeService';
 import { TopicService } from './TopicService';
 import { Marketing } from 'src/models/Marketing';
+import { AIKey } from 'src/models/AIKey';
 
 @Injectable()
 export class PromptService {
   /** PROPERTIES **/
   private readonly PER_PAGE = 10;
+  private readonly MAX_LATEST_SUGGESTED_CONS = 9;
 
   /** CONSTRUCTOR **/
   constructor(
     @InjectRepository(Prompt)
     protected readonly promptRepo: Repository<Prompt>,
+    @InjectRepository(AIKey)
+    protected readonly keyRepo: Repository<AIKey>,
     protected readonly accountService: AccountService,
     protected readonly conService: ConversationService,
     protected readonly topicService: TopicService,
@@ -309,10 +313,7 @@ export class PromptService {
    * call ai to explain a sentence in a conversation
    * @returns
    */
-  async explainLineOfSpeech(
-    line: LineOfSpeech,
-    account: Account,
-  ): Promise<string> {
+  async explainLineOfSpeech(line: LineOfSpeech): Promise<string> {
     // GET PROMPT TO FULFILL THIS TASK
     const _configs: typeof configs = require('../datas/configs.json');
     const prompt = await this.promptRepo.findOne({
@@ -322,8 +323,11 @@ export class PromptService {
 
     if (!prompt) return '';
 
+    // GET ACTIVE KEY
+    const activeKey = await this.getActiveKey();
+
     // CREATE AI OBJECT
-    const ai = new GoogleGenerativeAI(account.aiKey);
+    const ai = new GoogleGenerativeAI(activeKey);
     // AppService.debug('ai', ai);
 
     const model = ai.getGenerativeModel({ model: _configs.gemini_model });
@@ -399,43 +403,91 @@ export class PromptService {
   }
 
   async getSuggestedConversations(
-    account: Account,
-    excludedIds: number[],
-  ): Promise<Conversation[]> {
+    likedIds: number[],
+    learntIds: number[],
+    practicedIds: number[],
+  ): Promise<number[]> {
     // GET PROMPT TO FULFILL THIS TASK
     const _configs: typeof configs = require('../datas/configs.json');
     const prompt = await this.promptRepo.findOne({
       where: { id: _configs.prompts.sugguest_conversation },
     });
 
-    AppService.debug('prompt', { prompt });
+    // AppService.debug('prompt', { prompt });
 
     if (!prompt) return [];
 
+    // GET ACTIVE KEY
+    const activeKey = await this.getActiveKey();
+
     // CREATE AI OBJECT
-    const ai = new GoogleGenerativeAI(account.aiKey);
+    const ai = new GoogleGenerativeAI(activeKey);
     const model = ai.getGenerativeModel({ model: _configs.gemini_model });
 
-    // SAMPLE DATA
-    const sampleData = {
-      practiced_conversations: [],
-      liked_conversations: [],
-      liked_sentences: [],
-    };
+    // PRE DATA
+    const mapFunc = (c) => ({
+      id: c.id,
+      lines: c.lines.map((l) => l.content),
+      title: c.title,
+    });
 
-    // DATA STRUCTURE
-    const structure: Partial<number[]> = [-1];
+    const latestCons = (
+      await this.conService.getLatestConversations(
+        this.MAX_LATEST_SUGGESTED_CONS,
+        true,
+      )
+    ).map(mapFunc);
 
-    // INPUT DATA
-    const input = {};
+    const likedCons = (
+      await this.conService.getConversationsByIds(likedIds, true)
+    ).map(mapFunc);
 
-    const result = await model.generateContent(
-      PromptService.buildPrompt(sampleData, structure, input, prompt.content),
-    );
+    const learntCons = (
+      await this.conService.getConversationsByIds(learntIds, true)
+    ).map(mapFunc);
 
-    AppService.debug('result', result.response);
+    const practicedCons = (
+      await this.conService.getConversationsByIds(practicedIds, true)
+    ).map(mapFunc);
 
-    throw new Error('');
+    // BUILD PROMPT
+    prompt.content = PromptService.buildInputPrompt(prompt.content, [
+      {
+        key: '{{LATEST}}',
+        inputData: latestCons,
+      },
+      {
+        key: '{{LIKED}}',
+        inputData: likedCons,
+      },
+      {
+        key: '{{LEARNT}}',
+        inputData: learntCons,
+      },
+      {
+        key: '{{PRACTICED}}',
+        inputData: practicedCons,
+      },
+    ]);
+
+    // AppService.debug('prompt.content', { content: prompt.content });
+
+    const result = await model.generateContent(prompt.content);
+
+    // AppService.debug('result', result);
+
+    try {
+      const ids = PromptService.extractJsonFromAiResponse<number[]>(
+        result.response.text(),
+      );
+
+      // AppService.debug('ids', ids);
+
+      return ids;
+    } catch (error) {
+      AppService.error('Cannot suggest conversations', error);
+      return [];
+    }
   }
 
   /**
@@ -470,47 +522,32 @@ export class PromptService {
     }
   }
 
-  // STATIC METHODS
-
   /**
-   * to build a raw prompt before requesting
-   * @param sampleData
-   * @param structure
-   * @param inputData
-   * @param mainPrompt
+   * to get the active keys
    * @returns
    */
-  static buildPrompt(
-    sampleData: object,
-    structure: object,
-    inputData: object,
-    mainPrompt: string,
-  ): string {
-    const rawPrompt = `
-      You are an AI content generator for CODE-VERSATIONS – a language-learning website for IT professionals.
-      Your task is to generate structured, realistic, and educational conversations based on real-life IT workplace scenarios. These conversations help learners improve language fluency through context-rich dialogues involving technical and professional communication.
-      Each output should match the required JSON structure for integration into the website and be optimized for clarity, relevance, and natural tone.
+  async getActiveKey(): Promise<string> {
+    const _configs: typeof configs = require('../datas/configs.json');
 
-      ${mainPrompt}
+    const activeKeys = await this.keyRepo.find({
+      order: { createdAt: { direction: 'ASC' } },
+      take: 1,
+    });
+    let activeKey: string;
 
-      Here is some sample data:
-      \`\`\`json
-      ${JSON.stringify(sampleData)}
-      \`\`\`
+    if (activeKeys.length === 0) {
+      activeKey =
+        _configs.default_gemini_keys[
+          Math.floor(Math.random() * _configs.default_gemini_keys.length)
+        ];
+    } else {
+      activeKey = activeKeys[0].key;
+    }
 
-      Use this source JSON to generate if needed: 
-      \`\`\`json
-      ${JSON.stringify(inputData)}
-      \`\`\`
-
-      Respond ONLY in JSON using this structure: 
-      \`\`\`json
-      ${JSON.stringify(structure)}
-      \`\`\`
-    `;
-
-    return rawPrompt;
+    return activeKey;
   }
+
+  // STATIC METHODS
 
   /**
    * to create a string as JSON from a raw text

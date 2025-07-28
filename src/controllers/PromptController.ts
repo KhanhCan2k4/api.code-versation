@@ -220,20 +220,8 @@ export class PromptController {
    * @returns
    */
   @Get('/explain-sentence')
-  async explainSentence(
-    @Res() res,
-    @Query() query: { line_id: number },
-    @Headers() header: { token: string },
-  ) {
-    // GET ACCOUNT AND BEFORE REQUESTING
-    const account = await this.accountService.loginWithToken(header.token);
-
-    if (!account) {
-      AppService.error('Account Not Found');
-      return res.status(403).json(false);
-    }
-
-    const line = await this.conService.getLineOfSpeechById(query.line_id);
+  async explainSentence(@Res() res, @Query() query: { id: number }) {
+    const line = await this.conService.getLineOfSpeechById(query.id);
 
     if (!line) {
       AppService.error('Line Not Found');
@@ -246,10 +234,7 @@ export class PromptController {
     }
 
     try {
-      const explanation = await this.promptService.explainLineOfSpeech(
-        line,
-        account,
-      );
+      const explanation = await this.promptService.explainLineOfSpeech(line);
 
       return res.status(200).json({ explanation });
     } catch (error) {
@@ -301,6 +286,31 @@ export class PromptController {
       return res.status(200).json({ explanation });
     } catch (error) {
       AppService.error('Cannot create explanation', error);
+      return res.status(500).json(false);
+    }
+  }
+
+  @Post('/conversations/suggested')
+  async getSuggested(
+    @Res() res,
+    @Body()
+    body: {
+      liked_ids: number[];
+      learnt_ids: number[];
+      practiced_ids: number[];
+    },
+  ) {
+    try {
+      // GET CONVERSATIONS BY IDS
+      const conIds = await this.promptService.getSuggestedConversations(
+        body.liked_ids,
+        body.learnt_ids,
+        body.practiced_ids,
+      );
+
+      return res.status(200).json(conIds);
+    } catch (error) {
+      AppService.error('Cannot get paginated conversations by ids', error);
       return res.status(500).json(false);
     }
   }

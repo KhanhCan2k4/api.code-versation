@@ -688,39 +688,21 @@ export class AccountService {
     return accounts;
   }
 
-  async syncAIKeys(keys: string[], account: Account): Promise<void> {
+  async syncAIKeys(account: Account, keys: string[]) {
     try {
-      // CHECK KEY EXITS
+      // GET ALL KEYS
       const _keys = (
-        await this.keyRepo.find({ where: { accountId: account.id } })
+        await this.keyRepo.find({
+          where: { accountId: account.id },
+        })
       ).map((k) => k.key);
 
-      // FILTER DISTINC KEYS AND SAVE
-      const distincKeys: string[] = [];
-      const removedKeys: string[] = [];
+      // GET DIFFERENT KEYS
+      const diffKeys = keys.filter((k) => !_keys.includes(k));
 
-      _keys.forEach((k) => {
-        if (!keys.includes(k)) {
-          removedKeys.push(k);
-        } else {
-          distincKeys.push(k);
-        }
-      });
-
-      // SAVE
+      // SAVE DIFFERENT KEYS
       await this.keyRepo.save(
-        distincKeys.map((k) => {
-          const newK = new AIKey();
-          newK.key = k;
-          newK.accountId = account.id;
-
-          return newK;
-        }),
-      );
-
-      // REMOVE
-      await this.keyRepo.remove(
-        removedKeys.map((k) => {
+        diffKeys.map((k) => {
           const newK = new AIKey();
           newK.key = k;
           newK.accountId = account.id;
@@ -730,6 +712,39 @@ export class AccountService {
       );
     } catch (error) {
       AppService.error('Cannot sync ai keys', error);
+      throw new Error('Cannot sync ai key', error);
+    }
+  }
+
+  /**
+   * to save an api key
+   */
+  async saveKey(account: Account, key: string): Promise<boolean> {
+    try {
+      await this.keyRepo.save({ key, accountId: account.id });
+
+      return true;
+    } catch (error) {
+      AppService.error('Cannot save key', error);
+      return false;
+    }
+  }
+
+  /**
+   * get all raw api keys of account
+   */
+  async getAIKeysOfAccount(account: Account): Promise<string[]> {
+    try {
+      const keys = (
+        await this.keyRepo.find({
+          where: { accountId: account.id },
+        })
+      ).map((k) => k.key);
+
+      return keys;
+    } catch (error) {
+      AppService.error('Cannot get keys of account', error);
+      return [];
     }
   }
 
