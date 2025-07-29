@@ -359,6 +359,13 @@ export class ConversationService {
     }
   }
 
+  /**
+   * to like/unlike a conversation
+   * @param conversation
+   * @param account
+   * @param liked
+   * @returns
+   */
   async like(
     conversation: Conversation,
     account: Account,
@@ -385,6 +392,26 @@ export class ConversationService {
 
         await this.likedConRepo.remove(likedCon);
       }
+
+      return true;
+    } catch (error) {
+      AppService.error('Cannot like/unlike conversation', error);
+      return false;
+    }
+  }
+
+  /**
+   * to set as learnt conversation
+   * @param conversation
+   * @param account
+   * @returns
+   */
+  async learn(conversation: Conversation, account: Account): Promise<boolean> {
+    try {
+      await this.learntConRepo.save({
+        accountId: account.id,
+        conversationId: conversation.id,
+      });
 
       return true;
     } catch (error) {

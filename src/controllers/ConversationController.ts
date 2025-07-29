@@ -141,6 +141,34 @@ export class ConversationController {
     return res.status(200).json(result);
   }
 
+  @Put('/learn')
+  async learn(
+    @Res() res,
+    @Body() body: { id: number },
+    @Headers() header: { token: string },
+  ) {
+    // GET ACCOUNT
+    const account = await this.accountService.loginWithToken(header.token);
+
+    if (!account) {
+      AppService.error('Account Not Found');
+      return res.status(403).json(false);
+    }
+
+    // GET CONVERSATION BY ID
+    const conversation = await this.conService.getConversationById(body.id);
+
+    if (!conversation) {
+      AppService.error('Conversation Not Found');
+      return res.status(500).json(false);
+    }
+
+    // SET LEARNT
+    const result = await this.conService.learn(conversation, account);
+
+    return res.status(200).json(result);
+  }
+
   @Post('/learnt/paginated')
   async getPaginatedLearnt(
     @Res() res,

@@ -547,6 +547,54 @@ export class PromptService {
     return activeKey;
   }
 
+  async getAIChat(history: { role: string; content: string }[]): Promise<{
+    reply: string;
+    followUpSuggestions: string[];
+    vnMeaning: string;
+  } | null> {
+    // GET PROMPT TO FULFILL THIS TASK
+    const _configs: typeof configs = require('../datas/configs.json');
+    const prompt = await this.promptRepo.findOne({
+      where: { id: _configs.prompts.respond_chat },
+    });
+    // AppService.debug('prompt', { prompt });
+
+    if (!prompt) return null;
+
+    // CREATE AI OBJECT
+
+    const activeKey = await this.getActiveKey();
+
+    const ai = new GoogleGenerativeAI(activeKey);
+    // AppService.debug('ai', ai);
+
+    const model = ai.getGenerativeModel({ model: _configs.gemini_model });
+    // AppService.debug('model', model);
+
+    // ADD DATA INTO PROMPT
+    prompt.content = PromptService.buildInputPrompt(prompt.content, [
+      {
+        key: '{{HISTORY}}',
+        inputData: history,
+      },
+    ]);
+
+    const result = await model.generateContent(prompt.content);
+    // AppService.debug('result', result);
+
+    try {
+      const line = PromptService.extractJsonFromAiResponse<{
+        reply: string;
+        followUpSuggestions: string[];
+        vnMeaning: string;
+      }>(result.response.text());
+      return line;
+    } catch (error) {
+      AppService.error('Cannot get repsonse as line of speech', error);
+      return null;
+    }
+  }
+
   // STATIC METHODS
 
   /**

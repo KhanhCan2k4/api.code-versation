@@ -315,6 +315,16 @@ export class PromptController {
     }
   }
 
+  @Post('/ai-chat')
+  async getAIChat(
+    @Res() res,
+    @Body() body: { role: string; content: string }[],
+  ) {
+    const response = await this.promptService.getAIChat(body);
+
+    return res.status(200).json(response);
+  }
+
   @Post('/update')
   async updatePrompt(
     @Res() res,
