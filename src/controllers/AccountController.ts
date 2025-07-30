@@ -33,7 +33,6 @@ const THEME_COLORS = [
   '#f59e0b', // yellow
   '#06b6d4', // cyan
   '#6b7280', // gray
-  '#d1d5db', // light gray
 ];
 
 type TrashItem = {
