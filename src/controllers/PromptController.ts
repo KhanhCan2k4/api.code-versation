@@ -205,7 +205,7 @@ export class PromptController {
 
     try {
       const conversation =
-        await this.promptService.createWelcomeConversation(account);
+        await this.promptService.createWelcomeConversation(account); 
       return res.status(200).json(conversation);
     } catch (error) {
       AppService.error('Cannot create conversation', error);
@@ -250,19 +250,7 @@ export class PromptController {
    * @returns
    */
   @Get('/explain-question')
-  async explainSQuestion(
-    @Res() res,
-    @Query() query: { question_id: number },
-    @Headers() header: { token: string },
-  ) {
-    // GET ACCOUNT AND BEFORE REQUESTING
-    const account = await this.accountService.loginWithToken(header.token);
-
-    if (!account) {
-      AppService.error('Account Not Found');
-      return res.status(403).json(false);
-    }
-
+  async explainQuestion(@Res() res, @Query() query: { question_id: number }) {
     const question = await this.practiceService.getQuestionInPracticeById(
       query.question_id,
     );
@@ -278,10 +266,7 @@ export class PromptController {
     }
 
     try {
-      const explanation = await this.promptService.explainQuestion(
-        question,
-        account,
-      );
+      const explanation = await this.promptService.explainQuestion(question);
 
       return res.status(200).json({ explanation });
     } catch (error) {

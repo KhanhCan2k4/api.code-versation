@@ -11,9 +11,6 @@ export class Question {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: 'tinyint' })
-  type: number;
-
   @Column({ type: 'mediumtext' })
   question: string;
 
@@ -23,7 +20,7 @@ export class Question {
   @Column({ type: 'json' })
   options: string[];
 
-  @Column({ name: 'short_desc', type: 'mediumtext', nullable: true })
+  @Column({ name: 'short_explanation', type: 'mediumtext', nullable: true })
   shortExplanation: string;
 
   //   REALTIONS

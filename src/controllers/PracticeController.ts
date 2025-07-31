@@ -14,7 +14,7 @@ export class PracticeController {
   //   METHODS
   @Get('/')
   async getWelcome(@Res() res, @Query() query: { id: number }) {
-    const practice = await this.practiceService.getQuestionInPracticeById(
+    const practice = await this.practiceService.getQuestionsInPractice(
       query.id,
     );
 

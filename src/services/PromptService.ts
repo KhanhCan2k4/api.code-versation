@@ -363,7 +363,7 @@ export class PromptService {
    * call ai to explain a sentence in a conversation
    * @returns
    */
-  async explainQuestion(question: Question, account: Account): Promise<string> {
+  async explainQuestion(question: Question): Promise<string> {
     // GET PROMPT TO FULFILL THIS TASK
     const _configs: typeof configs = require('../datas/configs.json');
     const prompt = await this.promptRepo.findOne({
@@ -373,8 +373,11 @@ export class PromptService {
 
     if (!prompt) return '';
 
+    // GET ACTIVE KEY
+    const activeKey = await this.getActiveKey();
+
     // CREATE AI OBJECT
-    const ai = new GoogleGenerativeAI(account.aiKey);
+    const ai = new GoogleGenerativeAI(activeKey);
     // AppService.debug('ai', ai);
 
     const model = ai.getGenerativeModel({ model: _configs.gemini_model });
