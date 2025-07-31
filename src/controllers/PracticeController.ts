@@ -13,18 +13,14 @@ export class PracticeController {
 
   //   METHODS
   @Get('/')
-  async getWelcome(
-    @Res() res,
-    @Headers() header: { token: string },
-    @Query() query: { id: number },
-  ) {
-    // GET ACCOUNT BY TOKEN
-    const account = await this.accountService.getAccountByToken(header.token);
-    const practice = await this.practiceService.getPractice(query.id, account);
+  async getWelcome(@Res() res, @Query() query: { id: number }) {
+    const practice = await this.practiceService.getQuestionInPracticeById(
+      query.id,
+    );
 
     if (!practice) {
       AppService.error('Cannot get practice');
-      return res.status(500);
+      return res.status(500).json(false);
     }
 
     AppService.success('Get practice successfully');

@@ -8,7 +8,6 @@ import {
 import { Topic } from './Topic';
 import { LineOfSpeech } from './LineOfSpeech';
 import { Status } from 'src/datas/enums/status';
-import { Comment } from './Comment';
 
 @Entity('conversations')
 export class Conversation {

@@ -23,7 +23,6 @@ import { Topic } from './models/Topic';
 import { ConversationService } from './services/ConversationService';
 import { ConversationController } from './controllers/ConversationController';
 import { LineOfSpeech } from './models/LineOfSpeech';
-import { Practice } from './models/Practice';
 import { Question } from './models/Question';
 import { PracticeController } from './controllers/PracticeController';
 import { PracticeService } from './services/PracticeService';
@@ -55,7 +54,6 @@ const models = [
   Conversation,
   Topic,
   LineOfSpeech,
-  Practice,
   Question,
   Prompt,
   Log,

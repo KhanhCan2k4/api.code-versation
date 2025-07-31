@@ -1,12 +1,4 @@
-import {
-  Column,
-  Entity,
-  ManyToOne,
-  OneToMany,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
-import { Practice } from './Practice';
-import { Comment } from './Comment';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 export enum QuestionType {
   AUDIO_TEXT = 1,
@@ -28,27 +20,13 @@ export class Question {
   @Column({ type: 'tinyint' })
   answer: QuestionType;
 
-  @Column({ name: 'option_a' })
-  optionA: string;
-
-  @Column({ name: 'option_b' })
-  optionB: string;
-
-  @Column({ name: 'option_c', nullable: true })
-  optionC: string;
-
-  @Column({ name: 'option_d', nullable: true })
-  optionD: string;
+  @Column({ type: 'json' })
+  options: string[];
 
   @Column({ name: 'short_desc', type: 'mediumtext', nullable: true })
   shortExplanation: string;
 
   //   REALTIONS
-  @Column()
-  practice_id: number;
-
-  @ManyToOne(() => Practice, (practice) => practice.questions, {
-    onDelete: 'CASCADE',
-  })
-  practice: Practice;
+  @Column({ name: 'conversation_id' })
+  conversationId: number;
 }

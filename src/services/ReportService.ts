@@ -4,7 +4,6 @@ import { AppService } from 'src/app.service';
 import { Account } from 'src/models/Account';
 import { Conversation } from 'src/models/Conversation';
 import { Marketing } from 'src/models/Marketing';
-import { Practice } from 'src/models/Practice';
 import { Prompt } from 'src/models/Prompt';
 import { Topic } from 'src/models/Topic';
 import { Repository } from 'typeorm';
@@ -26,8 +25,7 @@ export class ReportService {
     protected readonly promptRepo: Repository<Prompt>,
     @InjectRepository(Conversation)
     protected readonly conRepo: Repository<Conversation>,
-    @InjectRepository(Practice)
-    protected readonly practiceRepo: Repository<Practice>,
+   
     @InjectRepository(Marketing)
     protected readonly marRepo: Repository<Marketing>,
   ) {}
@@ -172,47 +170,6 @@ export class ReportService {
       return report;
     } catch (error) {
       AppService.error('Cannot get conversation comparation', error, true);
-      return [];
-    }
-  }
-
-  /**
-   * to get the practice comparation report
-   * @returns
-   */
-  async getPracticeComparationReport(): Promise<ReportPart[]> {
-    // GET ALL PRACTICES
-    try {
-      const practices: { accountId: number }[] = await this.practiceRepo
-        .createQueryBuilder('practices')
-        .select('practices.account_id', 'accountId')
-        .getRawMany();
-
-      AppService.debug('practices', practices);
-
-      // CREATE REPORT
-      const report: ReportPart[] = [];
-
-      // COUNT EACH TYPE
-      const dailyCount = practices.filter((c) => c.accountId === -1).length;
-      report.push(
-        {
-          name: 'Daily Practice Test',
-          value: dailyCount,
-        },
-        {
-          name: 'Others',
-          value: practices.length - dailyCount,
-        },
-      );
-
-      return report;
-    } catch (error) {
-      AppService.error(
-        'Cannot get conversation comparation report',
-        error,
-        true,
-      );
       return [];
     }
   }

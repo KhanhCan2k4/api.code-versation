@@ -122,26 +122,6 @@ export class ReportController {
 
     return res.status(200).json(report);
   }
-
-  /**
-   * to get practice comparation report
-   */
-  @Get('/practice-comparation')
-  async getPracticeComparationReport(
-    @Res() res,
-    @Headers() header: { token: string },
-  ) {
-    // CHECK ADMIN ACCOUNT
-    const admin = await this.accountService.loginAdminWithToken(header.token);
-
-    if (!admin) {
-      AppService.error('Admin Not Fount');
-      return res.status(403).json(false);
-    }
-
-    const report = await this.reportService.getPracticeComparationReport();
-
-    return res.status(200).json(report);
-  }
+  
   /** STATIC METHODS **/
 }

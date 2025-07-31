@@ -510,11 +510,6 @@ export class AccountController {
       await this.conService.getPaginatedConversations(1, 100000, [-1, -1], '')
     ).data.length;
 
-    // PRACTICES
-    const practiceQuantity = (
-      await this.practiceService.getPaginatedPractices(1, 100000, '')
-    ).data.length;
-
     // PROMPTS
     const promptQuantity = (await this.promptService.getAllPrompts()).length;
 
@@ -557,7 +552,6 @@ export class AccountController {
       trash: trashQuantity,
       maintain: maintainStatus,
       marketing: marQuantity,
-      practice: practiceQuantity,
     });
   }
 

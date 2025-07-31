@@ -9,8 +9,6 @@ import {
 } from 'typeorm';
 import { Token } from './Token';
 import { LineOfSpeech } from './LineOfSpeech';
-import { Practice } from './Practice';
-import { Comment } from './Comment';
 
 @Entity('accounts')
 export class Account {
@@ -80,7 +78,4 @@ export class Account {
 
   @OneToMany(() => LineOfSpeech, (line) => line.speaker)
   lines: LineOfSpeech[];
-
-  @OneToMany(() => Practice, (practice) => practice.account)
-  practices: Practice[];
 }
