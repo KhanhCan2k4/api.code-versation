@@ -295,8 +295,15 @@ export class ConversationService {
   async getWelcomeConversation(): Promise<Conversation | null> {
     // GET WELCOME CONVERSATION IDS
     const welcomeConIds = (
-      await this.conRepo.find({ where: { topic_id: -1 } })
+      await this.conRepo
+        .createQueryBuilder('conversation')
+        .leftJoinAndSelect('conversation.lines', 'line')
+        .where('conversation.topic_id = :topicId', { topicId: -1 })
+        .groupBy('conversation.id, line.id')
+        .having('COUNT(line.id) > 0')
+        .getMany()
     ).map((c) => c.id);
+
     const id = welcomeConIds[Math.floor(Math.random() * welcomeConIds.length)];
 
     // AppService.debug('Welcome conversation id', { id });
