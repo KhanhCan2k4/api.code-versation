@@ -486,11 +486,15 @@ export class PromptService {
 
       // AppService.debug('ids', ids);
 
+      if (ids.length === 0) {
+        AppService.error('Cannot suggested conversations');
+      }
+
       return ids;
     } catch (error) {
-      AppService.error('Cannot suggest conversations', error);
+      AppService.error('Cannot suggested conversations', error);
       return [];
-    }
+    } 
   }
 
   /**

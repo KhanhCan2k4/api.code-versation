@@ -250,9 +250,9 @@ export class PromptController {
    * @returns
    */
   @Get('/explain-question')
-  async explainQuestion(@Res() res, @Query() query: { question_id: number }) {
+  async explainQuestion(@Res() res, @Query() query: { id: number }) {
     const question = await this.practiceService.getQuestionInPracticeById(
-      query.question_id,
+      query.id,
     );
 
     if (!question) {
@@ -295,7 +295,7 @@ export class PromptController {
 
       return res.status(200).json(conIds);
     } catch (error) {
-      AppService.error('Cannot get paginated conversations by ids', error);
+      AppService.error('Cannot get suggested conversations', error);
       return res.status(500).json(false);
     }
   }

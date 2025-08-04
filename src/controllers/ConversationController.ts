@@ -72,6 +72,13 @@ export class ConversationController {
     try {
       AppService.debug('body', body);
 
+      if (body.ids.length === 0) {
+        AppService.error(
+          'Cannot get paginated conversations by empty list of ids',
+        );
+        return res.status(500).json(false);
+      }
+
       // GET CONVERSATIONS BY IDS
       const cons = await this.conService.getPaginatedConversationsByIds(
         body.page ?? 1,

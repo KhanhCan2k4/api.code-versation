@@ -250,6 +250,8 @@ export class ConversationService {
     const skip = (page - 1) * perPage;
     const take = perPage;
 
+    AppService.debug('paginated params: ', { ids, skip, take });
+
     try {
       const [cons, total] = await this.conRepo
         .createQueryBuilder('conversations')
