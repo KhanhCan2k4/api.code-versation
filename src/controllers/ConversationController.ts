@@ -232,7 +232,7 @@ export class ConversationController {
       return res.status(500).json(false);
     }
   }
-
+ 
   @Get('/welcome')
   async getWelcome(@Res() res) {
     const conversation = await this.conService.getWelcomeConversation();
@@ -257,6 +257,15 @@ export class ConversationController {
 
     AppService.success('Get conversation with id successfully');
     return res.status(200).json(conversation);
+  }
+
+  @Post('/lines')
+  async getLines(@Res() res, @Body() body: { ids: number[] }) {
+    AppService.debug('ids', body.ids);
+
+    const lines = await this.conService.getLinesByIds(body.ids);
+
+    return res.status(200).json(lines);
   }
 
   @Put('')

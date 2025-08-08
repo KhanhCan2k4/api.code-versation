@@ -6,6 +6,7 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
+    "token": "node ./dist/scripts/generate_token.js",
     "build": "nest build && cp -r public dist/public",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
@@ -37,6 +38,7 @@
     "canvas": "^3.1.2",
     "colorette": "^2.0.20",
     "dotenv": "^16.4.7",
+    "googleapis": "^155.0.0",
     "gtts": "^0.2.1",
     "handlebars": "^4.7.8",
     "mysql2": "^3.14.0",

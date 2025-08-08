@@ -325,6 +325,21 @@ export class ConversationService {
   }
 
   /**
+   * get lines by ids
+   */
+  async getLinesByIds(ids: number[]): Promise<LineOfSpeech[]> {
+    try {
+      return await this.lineRepo.find({
+        where: { id: In(ids) },
+        relations: ['speaker'],
+      });
+    } catch (error) {
+      AppService.error('Cannot get lines by ids', error);
+      return [];
+    }
+  }
+
+  /**
    * to save conversation into database
    * @param conversation
    * @returns boolean
