@@ -230,8 +230,10 @@ export class ConversationController {
   }
 
   @Get('/welcome')
-  async getWelcome(@Res() res) {
-    const conversation = await this.conService.getWelcomeConversation();
+  async getWelcome(@Res() res, @Query() query: { lang: string }) {
+    const { conversation, lang } = await this.conService.getWelcomeConversation(
+      query.lang,
+    );
 
     if (!conversation) {
       AppService.error('Cannot get welcome conversation');
@@ -239,7 +241,7 @@ export class ConversationController {
     }
 
     AppService.success('Get welcome conversation successfully');
-    return res.status(200).json(conversation);
+    return res.status(200).json({ con: conversation, lang });
   }
 
   @Get('/')

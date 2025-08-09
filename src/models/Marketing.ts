@@ -26,9 +26,13 @@ export class Marketing {
     name: 'activated_at',
     type: 'timestamp',
     default: () => 'CURRENT_TIMESTAMP',
-    onUpdate: 'CURRENT_TIMESTAMP',
   })
   activatedAt: Date;
+
+  @Column({
+    default: 1,
+  })
+  loop: number;
 
   @Column({
     name: 'updated_at',

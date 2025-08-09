@@ -4,7 +4,7 @@ import { AppService } from 'src/app.service';
 import { Account } from 'src/models/Account';
 import PaginatedObject from 'src/models/PaginatedObject';
 import UpdatedResponseObject from 'src/models/UpdatedResponseObject';
-import { DeepPartial, In, Not, Repository } from 'typeorm';
+import { In, Not, Repository } from 'typeorm';
 import { OTPService } from './OTPService';
 import { TokenService } from './TokenService';
 import configs from '../datas/configs.json';
@@ -12,6 +12,7 @@ import { AccountStatus, Status } from 'src/datas/enums/status';
 import * as fs from 'fs';
 import * as path from 'path';
 import { AIKey } from 'src/models/AIKey';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const EMAIL_REGEX =
   /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
@@ -95,6 +96,13 @@ export class AccountService {
   }
 
   /**
+   * to get all basic account
+   */
+  async getAllBasicAccounts(): Promise<Account[]> {
+    return this.accountRepo.find({ where: { status: Status.ACTIVE } });
+  }
+
+  /**
    * to get quantity of users
    */
   async getAllUserQuantity(): Promise<number> {
@@ -173,68 +181,15 @@ export class AccountService {
    * @param aiKey
    * @returns
    */
-  async init(
-    username: string,
-    email: string,
-    aiKey: string,
-  ): Promise<UpdatedResponseObject<Account>> {
-    // RESPONSE OBJECT
-    const result = new UpdatedResponseObject<Account>(false);
-
-    //VALIDATE USERNAME
-    if (!AccountService.validateUserName(username)) {
-      result.messages.push('Invalid Username');
-    }
-
-    // VALIDATE EMAIL
-    if (!AccountService.validateEmail(email)) {
-      result.messages.push('Invalid Email');
-    }
-
-    // VALIDATE API KEY (ONLY WHEN USER PASS AI KEY)
-    if (aiKey && !AccountService.validateAIKey(aiKey)) {
-      result.messages.push('Invalid AI Key');
-    }
-
-    if (result.messages.length > 0) {
-      return result;
-    }
-
-    // CHECK UNIQUE ACCOUNT
-    let account: Account | null;
-    account = await this.accountRepo.findOne({ where: { email } });
-    if (account) {
-      result.messages.push('Email already exist');
-      return result;
-    }
-
-    // CHECK UNIQUE API KEY (ONLY WHEN USER PASS AI KEY)
-    if (aiKey) {
-      account = await this.accountRepo.findOne({ where: { aiKey: aiKey } });
-      if (account) {
-        result.messages.push('AI Key already exist');
-        return result;
-      }
-    }
-
-    // AppService.info('messages', result.messages);
-
+  async init(account: Account): Promise<boolean> {
     try {
-      // CREATE AND STORE ACCOUNT INTO DATABASE
-      account = await this.accountRepo.create({ email, name: username, aiKey });
-      account = await this.accountRepo.save(account);
+      await this.accountRepo.save(account);
 
-      // SET RESULT
-      result.result = true;
-      result.messages = ['Create new acount successfully'];
-      result.data = account;
-
-      return result;
+      return true;
     } catch (error) {
       // HANDLE ERROR
-      result.messages = ['Server Found Error. Please try later'];
       AppService.error('Init account failed', error);
-      return result;
+      return false;
     }
   }
 
@@ -305,11 +260,6 @@ export class AccountService {
       result.messages.push('Invalid Email');
     }
 
-    // VALIDATE API KEY (ONLY WHEN USER PASS AI KEY)
-    if (account.aiKey && !AccountService.validateAIKey(account.aiKey)) {
-      result.messages.push('Invalid AI Key');
-    }
-
     if (result.messages.length > 0) {
       return false;
     }
@@ -319,14 +269,6 @@ export class AccountService {
       result.messages.push('Email already exist');
       return false;
     }
-
-    // CHECK UNIQUE API KEY (ONLY WHEN USER PASS AI KEY)
-    if (await this.accountRepo.findOne({ where: { aiKey: account.aiKey } })) {
-      result.messages.push('AI Key already exist');
-      return false;
-    }
-
-    // AppService.info('messages', result.messages);
 
     try {
       // CREATE AND STORE ACCOUNT INTO DATABASE
@@ -365,13 +307,6 @@ export class AccountService {
       result.messages.push('Invalid Email');
     }
 
-    // VALIDATE API KEY (ONLY WHEN USER PASS AI KEY)
-    if (account.aiKey && !AccountService.validateAIKey(account.aiKey)) {
-      result.messages.push('Invalid AI Key');
-    }
-
-    // AppService.debug("error", result);
-
     if (result.messages.length > 0) {
       return false;
     }
@@ -385,18 +320,6 @@ export class AccountService {
       result.messages.push('Email already exist');
       return false;
     }
-
-    // CHECK UNIQUE API KEY (ONLY WHEN USER PASS AI KEY)
-    if (
-      await this.accountRepo.findOne({
-        where: { aiKey: account.aiKey, id: Not(account.id) },
-      })
-    ) {
-      result.messages.push('AI Key already exist');
-      return false;
-    }
-
-    // AppService.info('messages', result.messages);
 
     try {
       // CREATE AND STORE ACCOUNT INTO DATABASE
@@ -513,7 +436,7 @@ export class AccountService {
     }
 
     // VALIDATE AI KEY
-    if (!AccountService.validateAIKey(aiKey)) {
+    if (!(await AccountService.validateAIKey(aiKey))) {
       result.messages.push('Invalid Gemini AI Key');
     }
 
@@ -539,7 +462,6 @@ export class AccountService {
         { id: account.id },
         {
           name: userName,
-          aiKey: aiKey,
         },
       );
 
@@ -553,7 +475,6 @@ export class AccountService {
       result.result = true;
       result.messages = ['Login successfully'];
       account.name = userName;
-      account.aiKey = aiKey;
       result.data = account;
 
       return result;
@@ -620,35 +541,38 @@ export class AccountService {
     return account.id === _configs?.admin_id ? account : null;
   }
 
-  storeAIAccounts(
-    accounts: Account[],
-  ): Promise<UpdatedResponseObject<Account[]>> {
-    throw new Error();
-  }
-
   async getActiveAIKey(): Promise<string> {
-    // GET ALL AI ACCOUNTS
-    const assistants = (await this.getAllAIAccounts(1, 10000, '')).data; //41
+    let newestKey: AIKey | null = null;
+    try {
+      const newestKeys = await this.keyRepo.find({
+        order: {
+          updatedAt: {
+            direction: 'ASC',
+          },
+        },
+      });
 
-    let currentHour = new Date().getHours(); //7
-    if (currentHour === 0) {
-      currentHour = 24;
+      newestKey = newestKeys[0];
+    } catch (error) {
+      AppService.error('Cannot get api key', error);
     }
 
-    let activeIndex = 0;
+    // AppService.debug('newestKey', { key: newestKey });
 
-    if (currentHour > assistants.length) {
-      activeIndex = currentHour % assistants.length;
-    } else if (currentHour === assistants.length) {
-      activeIndex = assistants.length;
-    } else {
-      const itemQuantity =
-        Math.floor(assistants.length / 24) +
-        (currentHour <= assistants.length % 24 ? 1 : 0);
-      activeIndex = 24 * Math.floor(Math.random() * itemQuantity) + currentHour;
+    const _configs: typeof configs = require('../datas/configs.json');
+
+    // RETURN ONE DEFAULT KEY
+    if (!newestKey) {
+      return _configs.default_gemini_keys[
+        Math.floor(Math.random() * _configs.default_gemini_keys.length)
+      ];
     }
 
-    return assistants[activeIndex].aiKey;
+    // UPDATE KEY UESED
+    newestKey.updatedAt = new Date();
+    await this.keyRepo.save(newestKey);
+
+    return newestKey.key;
   }
 
   checkAPIMode(): boolean {
@@ -688,63 +612,19 @@ export class AccountService {
     return accounts;
   }
 
-  async syncAIKeys(account: Account, keys: string[]) {
-    try {
-      // GET ALL KEYS
-      const _keys = (
-        await this.keyRepo.find({
-          where: { accountId: account.id },
-        })
-      ).map((k) => k.key);
-
-      // GET DIFFERENT KEYS
-      const diffKeys = keys.filter((k) => !_keys.includes(k));
-
-      // SAVE DIFFERENT KEYS
-      await this.keyRepo.save(
-        diffKeys.map((k) => {
-          const newK = new AIKey();
-          newK.key = k;
-          newK.accountId = account.id;
-
-          return newK;
-        }),
-      );
-    } catch (error) {
-      AppService.error('Cannot sync ai keys', error);
-      throw new Error('Cannot sync ai key', error);
-    }
-  }
-
   /**
    * to save an api key
    */
-  async saveKey(account: Account, key: string): Promise<boolean> {
+  async saveKey(key: string): Promise<boolean> {
     try {
-      await this.keyRepo.save({ key, accountId: account.id });
+      if (!(await AccountService.validateAIKey(key))) return false;
+
+      await this.keyRepo.save({ key });
 
       return true;
     } catch (error) {
       AppService.error('Cannot save key', error);
       return false;
-    }
-  }
-
-  /**
-   * get all raw api keys of account
-   */
-  async getAIKeysOfAccount(account: Account): Promise<string[]> {
-    try {
-      const keys = (
-        await this.keyRepo.find({
-          where: { accountId: account.id },
-        })
-      ).map((k) => k.key);
-
-      return keys;
-    } catch (error) {
-      AppService.error('Cannot get keys of account', error);
-      return [];
     }
   }
 
@@ -777,10 +657,28 @@ export class AccountService {
    * @param key - string: key that needs to be checked
    * @returns boolean
    */
-  static validateAIKey(key: string): boolean {
-    if (!key) return false;
+  static async validateAIKey(key: string): Promise<boolean> {
+    if (!key || !AI_KEY_REGEX.test(key)) return false;
 
-    return AI_KEY_REGEX.test(key);
+    try {
+      const _configs: typeof configs = require('../datas/configs.json');
+
+      const genAI = new GoogleGenerativeAI(key);
+
+      // Make a small, cheap request to verify the key
+      const model = genAI.getGenerativeModel({ model: _configs.gemini_model });
+
+      await model.generateContent('ping'); // simple test prompt
+
+      return true; // request succeeded → key is valid
+    } catch (err: any) {
+      if (err.status === 401 || err.status === 403) {
+        // Unauthorized or forbidden → invalid key
+        return false;
+      }
+      AppService.error('Error while checking Gemini API key:', err);
+      return false;
+    }
   }
 
   /* to check a valid token

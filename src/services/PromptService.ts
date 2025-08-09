@@ -61,7 +61,7 @@ export class PromptService {
 
     // PICK 1 ASSISTANT AI KEY TO FULFILL TASK
     const apiKey = await this.accountService.getActiveAIKey();
-    // AppService.debug('aiKey', { apiKey });
+    AppService.debug('aiKey', { apiKey });
 
     // CREATE AI OBJECT
     const ai = new GoogleGenerativeAI(apiKey);
@@ -236,6 +236,11 @@ export class PromptService {
       conversation.topic = topic;
       conversation.topic_id = topic.id;
 
+      conversation.lines.forEach((line) => {
+        line.shortExplanation = '';
+        line.vnMeaning = '';
+      });
+
       // AppService.debug('conversation', conversation);
 
       // SAVE INTO DATABASE
@@ -266,8 +271,10 @@ export class PromptService {
 
     if (!prompt) return null;
 
+    const activeKey = await this.getActiveKey();
+
     // CREATE AI OBJECT
-    const ai = new GoogleGenerativeAI(account.aiKey);
+    const ai = new GoogleGenerativeAI(activeKey);
     // AppService.debug('ai', ai);
 
     const model = ai.getGenerativeModel({ model: _configs.gemini_model });
@@ -494,7 +501,7 @@ export class PromptService {
     } catch (error) {
       AppService.error('Cannot suggested conversations', error);
       return [];
-    } 
+    }
   }
 
   /**
@@ -537,7 +544,7 @@ export class PromptService {
     const _configs: typeof configs = require('../datas/configs.json');
 
     const activeKeys = await this.keyRepo.find({
-      order: { createdAt: { direction: 'ASC' } },
+      order: { updatedAt: { direction: 'ASC' } },
       take: 1,
     });
     let activeKey: string;

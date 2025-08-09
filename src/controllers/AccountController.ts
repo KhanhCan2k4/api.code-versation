@@ -26,7 +26,7 @@ import { PromptService } from 'src/services/PromptService';
 import { MarketingService } from 'src/services/MarketingService';
 import { PracticeService } from 'src/services/PracticeService';
 
-const THEME_COLORS = [
+export const THEME_COLORS = [
   '#3b82f6', // blue
   '#10b981', // green
   '#ef4444', // red
@@ -39,14 +39,6 @@ type TrashItem = {
   table: string;
   id: number;
   data: string | object;
-};
-
-type SyncData = {
-  likedConIds: number[];
-  learntConIds: number[];
-  practicedConIds: number[];
-  suggestedConIds: number[];
-  geminiKeys: string[];
 };
 
 @Controller('/api/accounts')
@@ -165,59 +157,6 @@ export class AccountController {
     const result = await this.imageService.moveToTrash(body.image);
 
     return res.status(200).json(result);
-  }
-
-  /**
-   * to init an account
-   * @param req
-   * @param res
-   * @returns
-   */
-  @Post('/init')
-  initAccount(
-    @Res() res,
-    @Body() body: { username: string; email: string; ai_key: string },
-  ) {
-    // AppService.debug('body', body);
-    //call service to store the account information
-    this.accountService
-      .init(body.username, body.email, body.ai_key)
-      .then((data) => {
-        // Init failed
-        if (!data.result || !data.data) {
-          AppService.error('Register unsuccessfully', data);
-          return res.status(500).json(data);
-        }
-
-        // send email to ask user to active their account
-        this.sendWelcomeMessage(data.data)
-          .then((result) => {
-            // SEND EMAIL UNSUCCESSFULLY
-            if (!result) {
-              AppService.error('Send email unsuccessfully');
-              data.messages.push(
-                'Your account was created but we cannot send active email for you. Please check later',
-              );
-              return res.status(500).json(data);
-            }
-
-            // SEND EMAIL SUCCESSFULLY
-            AppService.success('Send email successfully');
-            data.result = true;
-            return res.status(200).json(data);
-          })
-          .catch((error) => {
-            AppService.error('Send email unsuccessfully', error);
-            data.messages.push(
-              'Your account was created but we cannot send active email for you. Please check later',
-            );
-            return res.status(500).json(data);
-          });
-      })
-      .catch((error) => {
-        AppService.error('Init account unsuccessfully', error);
-        return res.status(500);
-      });
   }
 
   /**
@@ -348,6 +287,32 @@ export class AccountController {
       });
   }
 
+  @Post('/active-account')
+  async activeAccount(
+    @Res() res,
+    @Body() body: { email: string; otp: number },
+  ) {
+    // CHECK ACCOUNT
+    const account = await this.accountService.getAccountByEmail(body.email);
+
+    if (!account) {
+      AppService.error('Account Not Found');
+      return res.status(403).json(false);
+    }
+
+    // ACTIVE STATUS
+    account.status = Status.ACTIVE;
+
+    // SAVE NEW INFO
+    try {
+      await this.accountService.init(account);
+      return res.status(200).json(true);
+    } catch (error) {
+      AppService.error('Cannot active account', error);
+      return res.status(500).json(false);
+    }
+  }
+
   @Get('/login-with-token')
   async loginWithToken(@Res() res, @Headers() header: { token: string }) {
     // AppService.debug('header.token', { token: header.token });
@@ -383,11 +348,16 @@ export class AccountController {
   @Post('/request-login')
   async requestLogin(@Res() res, @Body() body: { email: string }) {
     // GET ACCOUNT WITH EMAIL
-    const account = await this.accountService.getAccountByEmail(body.email);
+    let account = await this.accountService.getAccountByEmail(body.email);
 
     if (!account) {
-      AppService.error('Account not found!');
-      return res.status(500).json(false);
+      // CREATE NEW ACCOUNT
+      account = new Account();
+      account.email = body.email;
+      account.name = 'GUEST';
+      account.status = Status.INACTIVE;
+
+      await this.accountService.init(account);
     }
 
     // START REQUESTING
@@ -397,6 +367,10 @@ export class AccountController {
       AppService.error('Request unsuccessfully');
       return res.status(500).json(false);
     }
+
+    // send email to ask user to active their account
+    await this.sendWelcomeMessage(account);
+
     AppService.success('Request successfully');
     return res.status(200).json(true);
   }
@@ -871,69 +845,11 @@ export class AccountController {
     return res.status(200).json(logs);
   }
 
-  @Post('/sync')
-  async syncUserData(
-    @Res() res,
-    @Headers() header: { token: string },
-    @Body() body: SyncData,
-  ) {
-    // CHECK ACCOUNT
-    const account = await this.accountService.loginWithToken(header.token);
-
-    if (!account) {
-      AppService.error('Account Not Found');
-      return res.status(500);
-    }
-
-    try {
-      await this.conService.syncLikedIds(account, body.likedConIds);
-
-      await this.conService.syncLearntIds(account, body.learntConIds);
-
-      await this.conService.syncPracticedIds(account, body.practicedConIds);
-
-      await this.accountService.syncAIKeys(account, body.geminiKeys);
-
-      return res.status(200).json(true);
-    } catch (error) {
-      AppService.error('Cannot get sync data', error);
-      return res.status(500).json(false);
-    }
-  }
-
   @Post('/save-key')
-  async saveKey(
-    @Res() res,
-    @Body() body: { key: string },
-    @Headers() header: { token: string },
-  ) {
-    // CHECK ACCOUNT
-    const account = await this.accountService.loginWithToken(header.token);
-
-    if (!account) {
-      AppService.error('Account Not Found');
-      return res.status(403).json(false);
-    }
-
-    const result = await this.accountService.saveKey(account, body.key);
+  async saveKey(@Res() res, @Body() body: { key: string }) {
+    const result = await this.accountService.saveKey(body.key);
 
     return res.status(200).json(result);
-  }
-
-  @Get('/api-keys')
-  async getAPIKeys(@Res() res, @Headers() header: { token: string }) {
-    // CHECK ACCOUNT
-    const account = await this.accountService.loginWithToken(header.token);
-
-    if (!account) {
-      AppService.error('Account Not Found');
-      return res.status(403).json(false);
-    }
-
-    // GET API KEYS
-    const keys = await this.accountService.getAIKeysOfAccount(account);
-
-    return res.status(200).json(keys);
   }
 
   /**

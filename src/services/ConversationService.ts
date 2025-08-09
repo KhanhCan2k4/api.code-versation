@@ -297,13 +297,21 @@ export class ConversationService {
    * get a random welcome conversation
    * @returns
    */
-  async getWelcomeConversation(): Promise<Conversation | null> {
+  async getWelcomeConversation(lang: string): Promise<{
+    conversation: Conversation | null;
+    lang: string;
+  }> {
     // GET WELCOME CONVERSATION IDS
     const welcomeConIds = (
       await this.conRepo
         .createQueryBuilder('conversation')
         .leftJoinAndSelect('conversation.lines', 'line')
-        .where('conversation.topic_id = :topicId', { topicId: -1 })
+        .where(
+          `conversation.topic_id = :topicId 
+            AND (conversation.lang = :lang 
+            OR conversation.lang = :langDefault)`,
+          { topicId: -1, lang: lang, langDefault: 'en-US' },
+        )
         .groupBy('conversation.id, line.id')
         .having('COUNT(line.id) > 0')
         .getMany()
@@ -319,12 +327,7 @@ export class ConversationService {
       relations: ['lines', 'lines.speaker'],
     });
 
-    if (conversation) {
-      conversation['image'] =
-        `/topics/${conversation.topic?.id ?? conversation.topic_id}.jpg`;
-    }
-
-    return conversation;
+    return { conversation, lang: conversation?.lang ?? 'en-US' };
   }
 
   /**

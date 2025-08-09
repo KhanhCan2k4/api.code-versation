@@ -1,13 +1,9 @@
-import { Column, Entity, ManyToOne } from 'typeorm';
-import { Account } from './Account';
+import { Column, Entity } from 'typeorm';
 
 @Entity('ai_keys')
 export class AIKey {
   @Column({ primary: true })
   key: string;
-
-  @Column({ name: 'account_id' })
-  accountId: number;
 
   @Column({
     name: 'created_at',
@@ -15,5 +11,5 @@ export class AIKey {
     default: () => 'CURRENT_TIMESTAMP',
     onUpdate: 'CURRENT_TIMESTAMP',
   })
-  createdAt: Date;
+  updatedAt: Date;
 }

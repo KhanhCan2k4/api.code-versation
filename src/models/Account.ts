@@ -21,9 +21,6 @@ export class Account {
   @Column({ unique: true })
   email: string;
 
-  @Column({ name: 'ai_key', unique: true })
-  aiKey: string;
-
   @Column({ name: 'short_desc', type: 'mediumtext', nullable: true })
   shortDesc: string;
 
