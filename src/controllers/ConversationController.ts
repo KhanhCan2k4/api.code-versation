@@ -13,13 +13,6 @@ import { Status } from 'src/datas/enums/status';
 import { AccountService } from 'src/services/AccountService';
 import { ConversationService } from 'src/services/ConversationService';
 
-enum TAB {
-  AI_SUGGESTION = 0,
-  ON_FIRE = 1,
-  ON_HISTORY = 2,
-  WITH_LOVE = 3,
-}
-
 @Controller('/api/conversations')
 export class ConversationController {
   // CONSTRUCTOR
@@ -40,9 +33,11 @@ export class ConversationController {
       liked_ids: number[];
       key: string;
       attached_welcome: boolean;
-      tab: TAB;
+      lang: string;
     },
   ) {
+    AppService.debug('body', body);
+
     try {
       const data = await this.conService.getPaginatedConversations(
         body.page ?? 1,
@@ -50,6 +45,7 @@ export class ConversationController {
         body.excluded_ids,
         body.key,
         body.attached_welcome,
+        body.lang,
       );
 
       return res.status(200).json(data);
@@ -232,7 +228,7 @@ export class ConversationController {
       return res.status(500).json(false);
     }
   }
- 
+
   @Get('/welcome')
   async getWelcome(@Res() res) {
     const conversation = await this.conService.getWelcomeConversation();

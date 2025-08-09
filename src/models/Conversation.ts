@@ -27,6 +27,9 @@ export class Conversation {
   })
   status: Status;
 
+  @Column({ default: 'en-US' })
+  lang: string;
+
   @Column({
     name: 'updated_at',
     type: 'timestamp',

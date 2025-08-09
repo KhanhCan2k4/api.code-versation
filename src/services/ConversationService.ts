@@ -50,6 +50,7 @@ export class ConversationService {
     excludedIds: number[] = [],
     key?: string,
     attachedWelcome: boolean = true,
+    lang: string = 'en-US',
   ): Promise<PaginatedObject<Conversation>> {
     try {
       const totalData = await this.conRepo.count();
@@ -80,12 +81,14 @@ export class ConversationService {
         .createQueryBuilder('conversations')
         .where(
           `conversations.id NOT IN (:...excludedIds) 
+            AND (conversations.lang = :lang)
             AND (conversations.topic_id > :min)
             AND (conversations.status = :status) 
             AND (conversations.title LIKE :key 
               OR conversations.short_desc LIKE :key 
               OR conversations.updated_at LIKE :key)`,
           {
+            lang: lang,
             excludedIds: [...excludedIds, -1, -1],
             key: `%${key ?? ''}%`,
             status: Status.ACTIVE,
@@ -256,7 +259,7 @@ export class ConversationService {
       const [cons, total] = await this.conRepo
         .createQueryBuilder('conversations')
         .where(
-          `conversations.id IN (:...ids) 
+          `conversations.id IN (:...ids)
             AND (conversations.topic_id > 0)
             AND (conversations.status = :status)`,
           {
