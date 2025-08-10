@@ -852,6 +852,49 @@ export class AccountController {
     return res.status(200).json(result);
   }
 
+  @Post('/download')
+  async sendDownloadEncriptedData(
+    @Res() res,
+    @Body() body: { email: string; encrypted: string; password: string },
+  ) {
+    //prepare data
+    const THEME_COLOR =
+      THEME_COLORS[Math.floor(Math.random() * THEME_COLORS.length)];
+    const APP_NAME = 'CODE-VERSATIONS';
+    const CURRENT_YEAR = new Date().getFullYear();
+    const PASSWORD = body.password;
+    const FILE_NAME = `CODE-VERSATIONS_LEARNING_DATA_${new Date().toUTCString()}.secure`;
+
+    const sendMailOptions: ISendMailOptions = {
+      to: body.email,
+      subject: 'LEARNING DATA FILE AT ' + APP_NAME,
+      template: 'download_file',
+      context: {
+        THEME_COLOR,
+        CURRENT_YEAR, 
+        APP_NAME,
+        PASSWORD,
+        FILE_NAME,
+      },
+      attachments: [
+        {
+          filename: FILE_NAME,
+          content: body.encrypted,
+        },
+      ],
+    };
+
+    //send email
+    try {
+      await this.mailService.sendMail(sendMailOptions);
+      AppService.success(`Email sent to ${body.email}`);
+      return res.status(200).json(true);
+    } catch (error) {
+      AppService.error(`Error sending email to ${body.email}:`, error);
+      return res.status(500).json(false);
+    }
+  }
+
   /**
    * to send welcome message for first access account
    * @param account
