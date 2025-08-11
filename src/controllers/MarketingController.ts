@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Headers,
+  Injectable,
   Post,
   Query,
   Res,
@@ -17,6 +18,7 @@ import { ISendMailOptions, MailerService } from '@nestjs-modules/mailer';
 import { Account } from 'src/models/Account';
 
 @Controller('/api/marketings')
+@Injectable()
 export class MarketingController {
   /** PROPERTIES **/
 

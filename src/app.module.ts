@@ -41,9 +41,8 @@ import { Comment } from './models/Comment';
 import { CommentController } from './controllers/CommentController';
 import { CommentService } from './services/CommentService';
 import { AIKey } from './models/AIKey';
-import { LikedConversation } from './models/LikedConversation';
-import { LearntConversation } from './models/LearntConversation';
-import { PracticedConversation } from './models/PracticedConversation';
+import { ScheduleModule } from '@nestjs/schedule';
+import { TasksService } from './services/TaskService';
 
 dotenv.config();
 
@@ -60,9 +59,6 @@ const models = [
   Marketing,
   Comment,
   AIKey,
-  LikedConversation,
-  LearntConversation,
-  PracticedConversation,
 ];
 
 const typeOrmModuleOptions: TypeOrmModuleOptions = {
@@ -105,6 +101,7 @@ const mailerOptions: MailerOptions = {
     TypeOrmModule.forFeature(models),
     ServeStaticModule.forRoot(serveStaticModuleOptions),
     MailerModule.forRoot(mailerOptions),
+    ScheduleModule.forRoot(),
   ],
   controllers: [
     AppController,
@@ -130,6 +127,8 @@ const mailerOptions: MailerOptions = {
     MarketingService,
     ReportService,
     CommentService,
+    TasksService,
+    MarketingController,
   ],
 })
 export class AppModule {}

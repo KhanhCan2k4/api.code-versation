@@ -1,5 +1,5 @@
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
-import { Status } from 'src/datas/enums/status';
+import { MarketingStatus, Status } from 'src/datas/enums/status';
 
 @Entity('marketings')
 export class Marketing {
@@ -15,9 +15,9 @@ export class Marketing {
   @Column({
     type: 'tinyint',
     nullable: false,
-    default: Status.ACTIVE,
+    default: MarketingStatus.FOR_GMAIL,
   })
-  status: Status;
+  status: Status | MarketingStatus;
 
   @Column({ default: 0 })
   count: number;

@@ -20,7 +20,7 @@ export class AppService {
     return 'Welcome to Code-versation API!';
   }
 
-  private static log(
+  private static async log(
     level: LogType,
     colorFn: (msg: string) => string,
     message: string,
@@ -34,28 +34,28 @@ export class AppService {
     }
 
     if (store) {
-      this.saveLog(message, level, data);
+      await this.saveLog(message, level, data);
     }
   }
 
   static info(message: string, data?: object, store?: boolean) {
-    this.log(LogType.INFO, blue, message, data);
+    this.log(LogType.INFO, blue, message, data, store);
   }
 
   static warn(message: string, data?: object, store?: boolean) {
-    this.log(LogType.WARN, yellow, message, data);
+    this.log(LogType.WARN, yellow, message, data, store);
   }
 
   static error(message: string, data?: object, store?: boolean) {
-    this.log(LogType.ERROR, red, message, data);
+    this.log(LogType.ERROR, red, message, data, store);
   }
 
   static debug(message: string, data?: object, store?: boolean) {
-    this.log(LogType.DEBUG, magenta, message, data);
+    this.log(LogType.DEBUG, magenta, message, data, store);
   }
 
   static success(message: string, data?: object, store?: boolean) {
-    this.log(LogType.SUCCESS, green, message, data);
+    this.log(LogType.SUCCESS, green, message, data, store);
   }
 
   /**
@@ -80,6 +80,7 @@ export class AppService {
     // SAVE TO DATABASE
     try {
       await this.logRepo.save(_log);
+      AppService.success('Save log successfully');
     } catch (error) {
       AppService.error('Cannot save log', error);
     }

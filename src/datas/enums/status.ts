@@ -9,10 +9,7 @@ export enum AccountStatus {
   IS_AI_DELETED = 5,
 }
 
-export enum LanguageStatus {}
-
-export enum RoleStatus {}
-
-export enum VoiceStatus {}
-
-export enum SituationStatus {}
+export enum MarketingStatus {
+  FOR_FACEBOOK = 4,
+  FOR_GMAIL = 5,
+}

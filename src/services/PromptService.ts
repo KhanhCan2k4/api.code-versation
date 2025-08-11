@@ -29,6 +29,8 @@ export class PromptService {
     protected readonly promptRepo: Repository<Prompt>,
     @InjectRepository(AIKey)
     protected readonly keyRepo: Repository<AIKey>,
+    @InjectRepository(Question)
+    protected readonly questionRepo: Repository<Question>,
     protected readonly accountService: AccountService,
     protected readonly conService: ConversationService,
     protected readonly topicService: TopicService,
@@ -244,14 +246,68 @@ export class PromptService {
       // AppService.debug('conversation', conversation);
 
       // SAVE INTO DATABASE
-      if (await this.conService.saveConversation(conversation)) {
-        return conversation;
-      }
-
-      return null;
+      return await this.conService.saveConversation(conversation);
     } catch (error) {
       AppService.error('Cannot create new conversation', error);
       return null;
+    }
+  }
+
+  /**
+   * call ai to generate new questions with a provided conversation
+   * @returns
+   */
+  async createQuestions(conversation: Conversation): Promise<Question[]> {
+    // GET PROMPT TO FULFILL THIS TASK
+    const _configs: typeof configs = require('../datas/configs.json');
+    const prompt = await this.promptRepo.findOne({
+      where: { id: _configs.prompts.create_practice_for_conversation },
+    });
+    // AppService.debug('prompt', { prompt });
+
+    if (!prompt) return [];
+
+    // PICK 1 ASSISTANT AI KEY TO FULFILL TASK
+    const apiKey = await this.accountService.getActiveAIKey();
+    // AppService.debug('aiKey', { apiKey });
+
+    // CREATE AI OBJECT
+    const ai = new GoogleGenerativeAI(apiKey);
+    // AppService.debug('ai', ai);
+
+    const model = ai.getGenerativeModel({ model: _configs.gemini_model });
+    // AppService.debug('model', model);
+
+    // ADD DATA INTO PROMPT
+    prompt.content = PromptService.buildInputPrompt(prompt.content, [
+      {
+        key: '{{CONVERSATION}}',
+        inputData: conversation,
+      },
+    ]);
+
+    const result = await model.generateContent(prompt.content);
+
+    AppService.debug('result', result);
+
+    try {
+      const questions = PromptService.extractJsonFromAiResponse<Question[]>(
+        result.response.text(),
+      );
+
+      questions.forEach((question) => {
+        question.conversationId = conversation.id;
+      });
+
+      // SAVE INTO DATABASE
+      if (await this.questionRepo.save(questions)) {
+        return questions;
+      }
+
+      return [];
+    } catch (error) {
+      AppService.error('Cannot create new questions', error);
+      return [];
     }
   }
 

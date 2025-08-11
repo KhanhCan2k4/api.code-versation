@@ -93,81 +93,12 @@ export class ConversationController {
   async getPaginatedLiked(
     @Res() res,
     @Body() body: { ids: number[]; page?: number; per_page?: number },
-    @Headers() header: { token: string },
   ) {
-    // CHECK ACCOUNT
-    const account = await this.accountService.loginWithToken(header.token);
-
-    let likedIds = body.ids;
-    if (account) {
-      likedIds = await this.conService.getLikedIds(account);
-    }
-
     const result = await this.conService.getPaginatedConversationsByIds(
       body.page,
       body.per_page,
-      likedIds,
+      body.ids,
     );
-
-    return res.status(200).json(result);
-  }
-
-  @Put('/like')
-  async like(
-    @Res() res,
-    @Body() body: { id: number; liked: boolean },
-    @Headers() header: { token: string },
-  ) {
-    // GET ACCOUNT
-    const account = await this.accountService.loginWithToken(header.token);
-
-    if (!account) {
-      AppService.error('Account Not Found');
-      return res.status(403).json(false);
-    }
-
-    // GET CONVERSATION BY ID
-    const conversation = await this.conService.getConversationById(body.id);
-
-    if (!conversation) {
-      AppService.error('Conversation Not Found');
-      return res.status(500).json(false);
-    }
-
-    // SET LIKE/UNLIKE
-    const result = await this.conService.like(
-      conversation,
-      account,
-      body.liked,
-    );
-
-    return res.status(200).json(result);
-  }
-
-  @Put('/learn')
-  async learn(
-    @Res() res,
-    @Body() body: { id: number },
-    @Headers() header: { token: string },
-  ) {
-    // GET ACCOUNT
-    const account = await this.accountService.loginWithToken(header.token);
-
-    if (!account) {
-      AppService.error('Account Not Found');
-      return res.status(403).json(false);
-    }
-
-    // GET CONVERSATION BY ID
-    const conversation = await this.conService.getConversationById(body.id);
-
-    if (!conversation) {
-      AppService.error('Conversation Not Found');
-      return res.status(500).json(false);
-    }
-
-    // SET LEARNT
-    const result = await this.conService.learn(conversation, account);
 
     return res.status(200).json(result);
   }
@@ -178,20 +109,10 @@ export class ConversationController {
     @Body() body: { ids: number[]; page?: number; per_page?: number },
     @Headers() header: { token: string },
   ) {
-    AppService.debug('body', body);
-
-    // CHECK ACCOUNT
-    const account = await this.accountService.loginWithToken(header.token);
-
-    let learntIds = body.ids;
-    if (account) {
-      learntIds = await this.conService.getLearntIds(account);
-    }
-
     const result = await this.conService.getPaginatedConversationsByIds(
       body.page,
       body.per_page,
-      learntIds,
+      body.ids,
     );
 
     return res.status(200).json(result);
