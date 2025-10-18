@@ -16,6 +16,7 @@ import { MarketingService } from 'src/services/MarketingService';
 import * as FB from 'fb';
 import { ISendMailOptions, MailerService } from '@nestjs-modules/mailer';
 import { Account } from 'src/models/Account';
+import { config } from 'dotenv';
 
 @Controller('/api/marketings')
 @Injectable()
@@ -220,8 +221,8 @@ export class MarketingController {
     } catch (error) {
       AppService.error(`Error sending email to ${account.email}:`, error);
       return false;
-    }
-  }
+    } 
+  }  
 
   /** STATIC METHODS **/
   /**
@@ -282,9 +283,10 @@ export class MarketingController {
     marketing: Marketing,
     onSent: (link: string) => void,
   ) {
+    config();
+
     FB.options({
-      accessToken:
-        'EAAPvAsF3q0YBPDAyZBryIAcZCjVh2MDJZBQ0nrki7G3uHdiyZAJRHKnQvB3ZBJvelA7iJFrtovbmwaJZCimAeQBu4jSDI5ZBIsMzKgI6NwDBZAZCgxoGYUpR3KknA6TuYYWu9upCgCSvJ3ZAFaBQPHdbsJCrISusup4ZC6S0S6tsjtR3OXZBg8vGnR8mSb8LnhJ3815GZBEz3evQc',
+      accessToken: process.env.FB_ACCESS_TOKEN,
     });
 
     const message = MarketingController.markdownToFacebookText(
@@ -292,7 +294,7 @@ export class MarketingController {
     );
 
     FB.api(
-      `${'728175530380226'}/feed`,
+      `${process.env.FB_PAGE_ID}/feed`,
       'post',
       {
         message,

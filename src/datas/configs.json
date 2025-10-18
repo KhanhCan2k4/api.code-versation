@@ -2,7 +2,7 @@
   "admin_id": 9,
   "gemini_model": "gemini-2.0-flash-001",
   "maintain_mode": false,
-  "origins": ["http://localhost:5173", "http://127.0.0.1:5173"],
+  "origins": ["http://localhost:5173", "http://127.0.0.1:5173", "https://code-versations.vercel.app"],
   "default_gemini_keys": [
     "AIzaSyDPwiAbKBwUYB9OL9kP3Lu2ndJMPnqUsQw",
     "AIzaSyDAx4hYwFdKfLDuvqcVUz_X7z1BvK8lE0o",
