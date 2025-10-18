@@ -1,10 +1,84 @@
-<html>
+<html lang='en'>
   <head>
     <meta charset='UTF-8' />
-    <title>{{title}}</title>
+    <meta name='viewport' content='width=device-width' />
+    <title>Welcome to {{APP_NAME}}</title>
+    <style
+    >
+      body {
+        font-family: "Segoe UI", sans-serif;
+        background-color: #f8f9fa;
+        margin: 0;
+        padding: 0;
+        color: #333;
+      }
+      .container {
+        max-width: 480px;
+        margin: 2rem auto;
+        background-color: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+        overflow: hidden;
+        border-top: 5px solid {{THEME_COLOR}};
+      }
+      .header {
+        padding: 24px;
+        text-align: center;
+        background-color: {{THEME_COLOR}};
+        color: #fff;
+      }
+      .content {
+        padding: 24px;
+        text-align: center;
+      }
+      .cta-button {
+        display: inline-block;
+        background-color: {{THEME_COLOR}};
+        color: #fff;
+        text-decoration: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-weight: bold;
+        margin-top: 20px;
+      }
+      .footer {
+        font-size: 12px;
+        color: #888;
+        text-align: center;
+        padding: 16px;
+      }
+    </style>
   </head>
   <body>
-    <h1>Hello, {{name}}</h1>
-    <p>Thank you for signing up.</p>
+    <div class='container'>
+      <div class='header'>
+        <h2>👋 Welcome to {{APP_NAME}}!</h2>
+      </div>
+      <div class='content'>
+        <p>Hi {{USERNAME}},</p>
+        <p>
+          You've just joined
+          <strong>{{APP_NAME}}</strong>
+          — the platform for
+          <strong>learning foreign languages in an IT context</strong>,
+          developed specially for software engineers, devs, and tech minds like
+          you.
+        </p>
+        <p>
+          Powered by
+          <strong>Google Gemini AI</strong>, our lessons adapt to your tech
+          knowledge, helping you communicate more confidently in global tech
+          teams.
+        </p>
+
+        <a href='{{DASHBOARD_LINK}}' class='cta-button'>Start Learning</a>
+      </div>
+      <div class='footer'>
+        &copy;
+        {{CURRENT_YEAR}}
+        {{APP_NAME}}
+        · Language learning reimagined for developers
+      </div>
+    </div>
   </body>
 </html>

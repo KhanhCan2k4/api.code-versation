@@ -1,0 +1,98 @@
+<html lang='en'>
+  <head>
+    <meta charset='UTF-8' />
+    <meta name='viewport' content='width=device-width' />
+    <title>Your Learning Data File</title>
+    <style
+    >
+      body {
+        font-family: "Segoe UI", sans-serif;
+        background-color: #f8f9fa;
+        margin: 0;
+        padding: 0;
+        color: #333;
+      }
+      .container {
+        max-width: 480px;
+        margin: 2rem auto;
+        background-color: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+        overflow: hidden;
+        border-top: 5px solid {{THEME_COLOR}};
+      }
+      .header {
+        padding: 24px;
+        text-align: center;
+        background-color: {{THEME_COLOR}};
+        color: #fff;
+      }
+      .content {
+        padding: 24px;
+        text-align: center;
+      }
+      .password-box {
+        display: inline-block;
+        margin: 20px 0;
+        font-size: 20px;
+        font-weight: bold;
+        color: {{THEME_COLOR}};
+        background: #f3f3f3;
+        padding: 10px 20px;
+        border-radius: 8px;
+      }
+      .footer {
+        font-size: 12px;
+        color: #888;
+        text-align: center;
+        padding: 16px;
+      }
+      .file-info {
+        margin-top: 16px;
+        font-size: 14px;
+        color: #555;
+        background: #fafafa;
+        padding: 12px;
+        border-radius: 8px;
+        text-align: left;
+      }
+    </style>
+  </head>
+  <body>
+    <div class='container'>
+      <div class='header'>
+        <h2>Your {{APP_NAME}} Learning Data File</h2>
+      </div>
+      <div class='content'>
+        <p>Hello there,</p>
+        <p>
+          We’ve prepared your requested learning data file. It is attached to
+          this email.
+        </p>
+
+        <div class='file-info'>
+          📎
+          <strong>Filename:</strong>
+          {{FILE_NAME}}<br />
+          🔐
+          <strong>Password:</strong>
+          Use the code below to open the file
+        </div>
+
+        <div class='password-box'>{{PASSWORD}}</div>
+
+        <p>
+          Keep this password safe — you’ll need it to access the file’s
+          contents.
+        </p>
+        <p>If you didn’t request this file, please ignore this email.</p>
+      </div>
+      <div class='footer'>
+        &copy;
+        {{CURRENT_YEAR}}
+        {{APP_NAME}}
+        — All rights reserved
+      </div>
+    </div>
+  </body>
+</html>

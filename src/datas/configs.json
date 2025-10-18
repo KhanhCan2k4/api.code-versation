@@ -1,0 +1,37 @@
+{
+  "admin_id": 9,
+  "gemini_model": "gemini-2.0-flash-001",
+  "maintain_mode": false,
+  "origins": ["http://localhost:5173", "http://127.0.0.1:5173", "https://code-versations.vercel.app"],
+  "default_gemini_keys": [
+    "AIzaSyDPwiAbKBwUYB9OL9kP3Lu2ndJMPnqUsQw",
+    "AIzaSyDAx4hYwFdKfLDuvqcVUz_X7z1BvK8lE0o",
+    "AIzaSyBNtKfspDn1Ouj79wS1ba4zQLT3UDostO0",
+    "AIzaSyClTYHK29W2PU7peWSlfBu7L5m7Z8pXOhk",
+    "AIzaSyB2tpe8G8TeCloQpVgGiUdS8-llvJsaBsk",
+    "AIzaSyB6-_dDA0g5Fg6fhoDYzTrPWjkQibAwvUM",
+    "AIzaSyBe5HEYepx8fS730it_oy0nyDiqfvLAdnk",
+    "AIzaSyD0RHZ-m4c_BUOvsmXTVpUC5eorM2A2xLw",
+    "AIzaSyCF77kQ8hw5-w7OxtxDbXKlbjlgYIF0Ysk",
+    "AIzaSyBzUJvQWvUL_Rr48-m5ILfIdUZbNdiZarQ",
+    "AIzaSyBCozMn7E9dZiMhM6gxTlARGQEDY_3plc0"
+  ],
+  "prompts": {
+    "create_ai_assistant": 1,
+    "create_topic": 2,
+    "create_welcome_conversation": 3,
+    "create_conversation": 4,
+    "sugguest_conversation": 5,
+    "process_report_conversation": 6,
+    "explain_conversation": 7,
+    "respond_chat": 8,
+    "create_global_practice": 9,
+    "create_personal_practice": 10,
+    "create_practice_for_conversation": 11,
+    "process_report_practice": 12,
+    "explain_question": 13,
+    "enhance_prompt": 14,
+    "update_prompt": 15,
+    "marketing_prompt": 16
+  }
+}
